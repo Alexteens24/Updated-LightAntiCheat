@@ -1,0 +1,70 @@
+# Checks
+
+## Movement checks
+* FlightA (Dynamic vertical speed)
+* FlightB (Maximum possible height)
+* FlightC (Complex flight check)
+* SpeedA (Horizontal speed)
+* SpeedB (Ground speed)
+* SpeedC (Prediction, including Bhop hack)
+* SpeedD (Underwater speed)
+* SpeedE (Maximum player speed, Teleport hack)
+* SpeedF (Legal flight speed)
+* NoFallA (Fall distance spoof)
+* NoFallB (Ground spoof)
+* JumpA (Vertical speed)
+* JumpB (Jump height, Spider Hack)
+* LiquidWalkA (Jesus hack)
+* LiquidWalkB (Jesus hack)
+* FastClimbA (Speed while climbing)
+* NoSlowA (Speed while in cobweb)
+* StepA (Step hack)
+* BoatA (BoatFly hack, horizontal speed)
+* VehicleA (Other vehicles)
+* ElytraA (Elytra check)
+* ElytraB (Elytra check)
+* ElytraC (Takeoff without a firework)
+* TridentA (TridentBoost hack)
+
+## Combat checks
+* KillAuraA (A basic Aimbot check)
+* KillAuraB (Hitbox)
+* KillAuraC (Attack through blocks)
+* KillAuraD (While using a shield, multiple targets)
+* ReachA (Reach check)
+* ReachB (Accurate reach check)
+* CriticalsA (Packet hack)
+* CriticalsB (MiniJump check)
+* AutoClickerA (AutoClicker pattern)
+* AutoClickerA (Maximum CPS)
+* VelocityA (Knockback)
+
+## Interaction checks
+* AirPlaceA (AirPlace, LiquidPlace hacks)
+* FastPlaceA (FastPlace check)
+* BlockPlaceA (Head rotation)
+* BlockPlaceB (Block place reach)
+* GhostBreakA (Interaction through blocks)
+* FastBreakA (Mining speed for stone, deepslate)
+* BlockBreakA (Head rotation)
+* BlockBreakB (Block break reach)
+* ScaffoldA (Impossible placement)
+* ScaffoldB (Sprinting)
+
+## Packet checks
+* MorePacketsA (Maximum packet rate)
+* MorePacketsB (Tuned to detect Nuker hack)
+* TimerA (Movement Timer hack)
+* TimerB (Global Timer hack)
+* BadPacketsA (Protocol check)
+* BadPacketsB (Protocol check)
+* BadPacketsC (Invalid packets)
+* BadPacketsD (Invalid packets)
+
+## Inventory checks
+* SortingA (Too fast, InventorySorter mod)
+* ItemSwapA (While walking, DoubleHotbar mod)
+
+## Player checks
+* AutoBotA (AutoWalk, AntiAFK hacks)
+* SkinBlinker (SkinBlinker hack)

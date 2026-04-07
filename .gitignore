@@ -1,0 +1,46 @@
+# Gradle
+bin/
+build/
+run/
+.gradle/
+.gradletasknamecache
+.gradle-user-home/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Libraries (you said NO libs)
+libs/
+
+# IntelliJ
+out/
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.settings/
+tmp/
+.metadata
+.classpath
+.project
+
+# Misc
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Local config
+local.properties
+.loadpath
+.factorypath
+gradle.properties
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
