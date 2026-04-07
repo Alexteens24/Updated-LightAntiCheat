@@ -12,6 +12,7 @@
 * SpeedF (Legal flight speed)
 * NoFallA (Fall distance spoof)
 * NoFallB (Ground spoof)
+* NoFallC (Waitfordamage)
 * JumpA (Vertical speed)
 * JumpB (Jump height, Spider Hack)
 * LiquidWalkA (Jesus hack)

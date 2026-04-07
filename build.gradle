@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'me.vekster'
-version = '1.2.7'
+version = '(HotFix) 1.2.7'
 
 repositories {
     mavenCentral()
