@@ -265,14 +265,20 @@ public class ConfigManager extends PlaceholderConvertor {
         Logger.logFile("");
     }
 
-    public static CheckSetting loadCheck(CheckSetting checkSetting) {
-        CheckName checkName = checkSetting.name;
-        ConfigurationSection section = Main.getInstance().getConfig()
+    private static ConfigurationSection getCheckSection(CheckName checkName) {
+        return Main.getInstance().getConfig()
                 .getConfigurationSection("checks" +
                         "." + checkName.type.name().toLowerCase() +
                         "." + checkName.group.toLowerCase() +
                         "." + checkName.group.toLowerCase() + "_" + checkName.check.toString().toLowerCase());
-        if (section == null || section.getKeys(false).size() == 0) {
+    }
+
+    public static CheckSetting loadCheck(CheckSetting checkSetting) {
+        CheckName checkName = checkSetting.name;
+        ConfigurationSection section = getCheckSection(checkName);
+        if ((section == null || section.getKeys(false).isEmpty()) && checkName == CheckName.NOFALL_C)
+            section = getCheckSection(CheckName.NOFALL_B);
+        if (section == null || section.getKeys(false).isEmpty()) {
             Logger.logConsole(LogType.ERROR, "(" + Main.getInstance().getName() + ") config.yml is invalid! " +
                     "The config selection of " + checkName.title + " check is invalid!");
             return checkSetting;
@@ -291,3 +297,4 @@ public class ConfigManager extends PlaceholderConvertor {
     }
 
 }
+

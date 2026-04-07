@@ -12,6 +12,7 @@ public class LACAsyncPacketReceiveEvent extends Event {
     private static final HandlerList handlers = new HandlerList();
     private final Player player;
     private final LACPlayer lacPlayer;
+    private final String packetName;
     private final PacketType packetType;
     private final int entityId;
 
@@ -20,6 +21,7 @@ public class LACAsyncPacketReceiveEvent extends Event {
 
         this.player = player;
         this.lacPlayer = lacPlayer;
+        this.packetName = nmsPacket.getClass().getSimpleName().split("\\$")[0];
         this.packetType = PacketTypeRecognizer.getPacketType(nmsPacket);
         this.entityId = PacketTypeRecognizer.getEntityId(nmsPacket);
     }
@@ -30,6 +32,10 @@ public class LACAsyncPacketReceiveEvent extends Event {
 
     public LACPlayer getLacPlayer() {
         return lacPlayer;
+    }
+
+    public String getPacketName() {
+        return packetName;
     }
 
     public PacketType getPacketType() {
@@ -48,3 +54,4 @@ public class LACAsyncPacketReceiveEvent extends Event {
         return handlers;
     }
 }
+

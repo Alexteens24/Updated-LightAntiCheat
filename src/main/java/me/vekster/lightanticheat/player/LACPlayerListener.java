@@ -415,7 +415,8 @@ public class LACPlayerListener implements Listener {
     @EventHandler
     public void lastWindCharge(PlayerInteractEvent event) {
         if (CheckUtil.isExternalNPC(event)) return;
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK)
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK &&
+                event.getAction() != Action.RIGHT_CLICK_AIR)
             return;
         Player player = event.getPlayer();
         ItemStack main = VerPlayer.getItemInMainHand(player);
@@ -761,3 +762,4 @@ public class LACPlayerListener implements Listener {
     }
 
 }
+

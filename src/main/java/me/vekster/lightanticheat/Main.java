@@ -34,6 +34,7 @@ import me.vekster.lightanticheat.check.checks.movement.liquidwalk.LiquidWalkA;
 import me.vekster.lightanticheat.check.checks.movement.liquidwalk.LiquidWalkB;
 import me.vekster.lightanticheat.check.checks.movement.nofall.NoFallA;
 import me.vekster.lightanticheat.check.checks.movement.nofall.NoFallB;
+import me.vekster.lightanticheat.check.checks.movement.nofall.NoFallC;
 import me.vekster.lightanticheat.check.checks.movement.noslow.NoSlowA;
 import me.vekster.lightanticheat.check.checks.movement.speed.*;
 import me.vekster.lightanticheat.check.checks.movement.step.StepA;
@@ -130,6 +131,7 @@ public class Main extends JavaPlugin {
         registerCheckListener(new FastClimbA());
         registerCheckListener(new NoFallA());
         registerCheckListener(new NoFallB());
+        registerCheckListener(new NoFallC());
         registerCheckListener(new NoSlowA());
         registerCheckListener(new SpeedA());
         registerCheckListener(new SpeedB());
@@ -208,3 +210,4 @@ public class Main extends JavaPlugin {
     }
 
 }
+

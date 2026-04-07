@@ -12,6 +12,7 @@ public enum CheckName {
     SPEED_F(CheckType.MOVEMENT, "Speed_F", "Legal"),
     NOFALL_A(CheckType.MOVEMENT, "NoFall_A", "FallDistance"),
     NOFALL_B(CheckType.MOVEMENT, "NoFall_B", "GroundSpoof"),
+    NOFALL_C(CheckType.MOVEMENT, "NoFall_C", "WaitForDamage"),
     JUMP_A(CheckType.MOVEMENT, "Jump_A", "Speed"),
     JUMP_B(CheckType.MOVEMENT, "Jump_B", "Height"),
     LIQUIDWALK_A(CheckType.MOVEMENT, "LiquidWalk_A", "Jesus"),
@@ -82,3 +83,4 @@ public enum CheckName {
         this.check = title.split("_", 2)[1].charAt(0);
     }
 }
+

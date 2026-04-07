@@ -75,8 +75,8 @@ public class FlightA extends MovementCheck implements Listener {
                 time - cache.lastStrongKbVelocity > 5000 && time - cache.lastStrongAirKbVelocity > 15 * 1000 &&
                 time - cache.lastFlight > 750 &&
                 time - cache.lastGliding > 2000 && time - cache.lastRiptiding > 3500 &&
-                time - cache.lastWindCharge > 1000 && time - cache.lastWindChargeReceive > 500 &&
-                time - cache.lastWindBurst > 1500 && time - cache.lastWindBurstNotVanilla > 4000;
+                time - cache.lastWindCharge > 2500 && time - cache.lastWindChargeReceive > 1500 &&
+                time - cache.lastWindBurst > 2250 && time - cache.lastWindBurstNotVanilla > 4500;
     }
 
     @EventHandler
@@ -930,3 +930,4 @@ public class FlightA extends MovementCheck implements Listener {
     }
 
 }
+

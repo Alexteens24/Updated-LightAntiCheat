@@ -25,6 +25,8 @@ public class BadPacketsC extends PacketCheck implements Listener {
     public void onAsyncPacketReceive(LACAsyncPacketReceiveEvent event) {
         if (event.getPacketType() != PacketType.STEER_VEHICLE)
             return;
+        if (event.getPacketName().equals("ServerboundPlayerInputPacket"))
+            return;
 
         Player player = event.getPlayer();
         LACPlayer lacPlayer = event.getLacPlayer();
@@ -68,3 +70,4 @@ public class BadPacketsC extends PacketCheck implements Listener {
     }
 
 }
+
