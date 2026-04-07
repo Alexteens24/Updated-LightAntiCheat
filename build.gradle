@@ -9,31 +9,20 @@ version = '1.2.7'
 
 repositories {
     mavenCentral()
-    // Config Updater
     maven { url 'https://oss.sonatype.org/content/groups/public/' }
-    // Floodgate
     maven { url 'https://repo.opencollab.dev/main/' }
-    // FoliaLib
     maven { url 'https://nexuslite.gcnt.net/repos/other/' }
 }
 
 dependencies {
-    // JetBrains Annotations
     implementation 'org.jetbrains:annotations:26.0.1'
-    // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
-    // Spigot API
     compileOnly files('comp/spigot-1.8.8-R0.1-SNAPSHOT-latest.jar')
-    // Netty
     compileOnly 'io.netty:netty-all:4.2.3.Final'
-    // FoliaLib
     implementation 'com.tcoded:FoliaLib:0.4.2'
-    // Floodgate
     compileOnly 'org.geysermc.floodgate:api:2.2.3-SNAPSHOT'
-    // Config Updater
     implementation 'com.tchristofferson:ConfigUpdater:2.2'
-    // MultiVersion
     implementation fileTree('impl/multiversion')
 }
 
@@ -54,7 +43,6 @@ publishing {
             }
         }
     }
-
 
     publications {
         gpr(MavenPublication) {
@@ -83,5 +71,4 @@ shadowJar {
     relocate('com.tchristofferson', 'org.tchristofferson')
     relocate('com.tcoded', 'org.tcoded')
     archiveClassifier.set('')
-    destinationDirectory.set(file(destinationPath))
 }
