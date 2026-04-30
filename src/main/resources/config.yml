@@ -489,22 +489,6 @@ checks:
           max-ping: 10000
           java: true
           bedrock: true
-    boat:
-      boat_a:
-        enabled: true
-        punishment:
-          punishable: true
-          punishment-vio: 35
-          commands:
-            - "kick %name% %check%"
-        setback:
-          setback: false
-          setback-vio: 18
-        detection:
-          min-tps: 5.0
-          max-ping: 10000
-          java: true
-          bedrock: true
     vehicle:
       vehicle_a:
         enabled: true
@@ -1010,21 +994,6 @@ checks:
           java: true
           bedrock: true
       badpackets_c:
-        enabled: true
-        punishment:
-          punishable: true
-          punishment-vio: 15
-          commands:
-            - "kick %name% %check%"
-        setback:
-          setback: false
-          setback-vio: 14
-        detection:
-          min-tps: 5.0
-          max-ping: 10000
-          java: true
-          bedrock: true
-      badpackets_d:
         enabled: true
         punishment:
           punishable: true

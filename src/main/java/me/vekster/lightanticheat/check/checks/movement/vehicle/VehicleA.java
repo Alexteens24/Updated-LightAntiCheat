@@ -27,12 +27,18 @@ import java.util.Set;
  * Boat fly and vehicle speed limiter.
  */
 public class VehicleA extends MovementCheck implements Listener {
-    private static final double MAX_BOAT_GROUND_SPEED = 0.17D;
-    private static final double MAX_BOAT_WATER_SPEED = 0.45D;
-    private static final double BOAT_FLY_TOLERANCE = 0.03D;
+    private static final double MAX_BOAT_GROUND_SPEED = 0.15D;
+    private static final double MAX_BOAT_WATER_SPEED = 0.41D;
+    private static final double BOAT_FLY_TOLERANCE = 0.02D;
     private static final double BOAT_GRAVITY = 0.04D;
     private static final double BOAT_DRAG = 0.98D;
+    private static final int BOAT_GROUND_GRACE_TICKS = 2;
+    private static final int BOAT_FLY_GRACE_TICKS = 4;
+    private static final long BOAT_ENTITY_COLLISION_GRACE_MS = 1500L;
     private static final long ICE_GRACE_MS = 3000L;
+    private static final double BOAT_WATER_BALANCE_THRESHOLD = 105.0D;
+    private static final double BOAT_GROUND_BALANCE_THRESHOLD = 100.0D;
+    private static final double BOAT_AIR_BALANCE_THRESHOLD = 95.0D;
 
     public VehicleA() {
         super(CheckName.VEHICLE_A);
@@ -79,21 +85,20 @@ public class VehicleA extends MovementCheck implements Listener {
 
         long currentTime = System.currentTimeMillis();
         if (boat.isInsideVehicle() ||
-                currentTime - lacPlayer.cache.lastInsideVehicle < 200 ||
                 currentTime - lacPlayer.cache.lastTeleport < 500 ||
                 currentTime - lacPlayer.cache.lastSlimeBlock < 1500 ||
                 currentTime - lacPlayer.cache.lastHoneyBlock < 1500) {
-            resetBoat(buffer, false);
+            resetBoat(buffer, true);
             return;
         }
 
-        if (currentTime - buffer.getLong("boatEntityCollisionTime") <= 1500L) {
-            resetBoat(buffer, false);
+        if (currentTime - buffer.getLong("boatEntityCollisionTime") < BOAT_ENTITY_COLLISION_GRACE_MS) {
+            resetBoat(buffer, true);
             return;
         }
         if (AsyncUtil.getNearbyEntities(boat, 1, 2, 1).size() > 1) {
             buffer.put("boatEntityCollisionTime", currentTime);
-            resetBoat(buffer, false);
+            resetBoat(buffer, true);
             return;
         }
 
@@ -102,90 +107,124 @@ public class VehicleA extends MovementCheck implements Listener {
         Location previous = buffer.getLocation("boatPreviousLocation");
         buffer.put("boatPreviousLocation", from);
 
+        Location boatLocation = boat.getLocation();
+        Location previousBoatLocation = buffer.getLocation("boatLocation");
+        buffer.put("boatLocation", boatLocation);
+
         double deltaY = distanceVertical(from, to);
+        double previousDeltaY = buffer.getDouble("boatLastDeltaY");
         buffer.put("boatLastDeltaY", deltaY);
-        if (previous == null)
+
+        if (previous == null || previousBoatLocation == null)
             return;
 
-        if (hasSolidCollision(boat, from) || hasSolidCollision(boat, to)) {
-            resetBoat(buffer, false);
+        if (hasSolidCollision(boat, previousBoatLocation) || hasSolidCollision(boat, boatLocation)) {
+            resetBoat(buffer, true);
             return;
         }
 
-        double horizontalSpeed = Math.min(
-                distanceHorizontal(from, to),
-                distanceHorizontal(previous, to) / 2.0
-        );
+        double horizontalSpeed = getBoatHorizontalSpeed(previous, from, to);
 
-        Set<Block> toDownBlocks = getDownBlocks(boat, to, 0.45);
-        Set<Block> fromDownBlocks = getDownBlocks(boat, from, 0.45);
+        Set<Block> toDownBlocks = getDownBlocks(boat, boatLocation, 0.45);
+        Set<Block> fromDownBlocks = getDownBlocks(boat, previousBoatLocation, 0.45);
         if (isIce(toDownBlocks) || isIce(fromDownBlocks))
             buffer.put("boatIceTime", currentTime);
 
-        boolean onWater = isTouchingLiquid(boat, from) || isTouchingLiquid(boat, to);
+        boolean onWater = isTouchingLiquid(boat, previousBoatLocation) || isTouchingLiquid(boat, boatLocation);
         if (onWater) {
             buffer.put("boatGroundTicks", 0);
             buffer.put("boatAirTicks", 0);
             buffer.put("boatExpectedFallVelocity", 0.0D);
-            buffer.put("boatAirFlags", Math.max(buffer.getInt("boatAirFlags") - 1, 0));
-            buffer.put("boatGroundFlags", Math.max(buffer.getInt("boatGroundFlags") - 1, 0));
+            decayBoatAir(buffer);
+            decayBoatGround(buffer);
+            int waterTicks = buffer.getInt("boatWaterTicks") + 1;
+            buffer.put("boatWaterTicks", waterTicks);
 
-            if (currentTime - buffer.getLong("boatIceTime") >= ICE_GRACE_MS) {
-                if (horizontalSpeed > MAX_BOAT_WATER_SPEED)
-                    buffer.put("boatWaterFlags", Math.min(buffer.getInt("boatWaterFlags") + 1, 5));
-                else
-                    buffer.put("boatWaterFlags", Math.max(buffer.getInt("boatWaterFlags") - 1, 0));
-
-                if (buffer.getInt("boatWaterFlags") >= 3)
-                    flagBoat(player, lacPlayer, event, buffer);
-            } else {
-                buffer.put("boatWaterFlags", Math.max(buffer.getInt("boatWaterFlags") - 1, 0));
+            if (waterTicks <= 1 || currentTime - buffer.getLong("boatIceTime") < ICE_GRACE_MS) {
+                decayBoatWater(buffer);
+                return;
             }
+
+            double waterExcess = horizontalSpeed - MAX_BOAT_WATER_SPEED;
+            if (waterExcess > 0.0D) {
+                int boatWaterFlags = buffer.getInt("boatWaterFlags") + (waterExcess > 0.08D ? 2 : 1);
+                buffer.put("boatWaterFlags", Math.min(boatWaterFlags, 6));
+
+                double boatWaterBalance = Math.max(buffer.getDouble("boatWaterBalance") - 20.0D, -250.0D);
+                boatWaterBalance += 35.0D + waterExcess * 260.0D;
+                buffer.put("boatWaterBalance", Math.min(boatWaterBalance, 320.0D));
+            } else {
+                decayBoatWater(buffer);
+            }
+
+            if (buffer.getInt("boatWaterFlags") >= 3 ||
+                    buffer.getDouble("boatWaterBalance") >= BOAT_WATER_BALANCE_THRESHOLD)
+                flagBoat(player, lacPlayer, event, buffer);
             return;
         }
 
-        buffer.put("boatWaterFlags", Math.max(buffer.getInt("boatWaterFlags") - 1, 0));
+        buffer.put("boatWaterTicks", 0);
+        decayBoatWater(buffer);
 
-        if (boat.isOnGround() || isOnGround(boat, 0.2, LeanTowards.TRUE, false)) {
+        if (isBoatOnGround(boat, boatLocation, false)) {
             buffer.put("boatAirTicks", 0);
             buffer.put("boatExpectedFallVelocity", 0.0D);
-            buffer.put("boatAirFlags", Math.max(buffer.getInt("boatAirFlags") - 1, 0));
+            decayBoatAir(buffer);
             int groundTicks = buffer.getInt("boatGroundTicks") + 1;
             buffer.put("boatGroundTicks", groundTicks);
 
-            if (groundTicks > 3) {
-                if (horizontalSpeed > MAX_BOAT_GROUND_SPEED)
-                    buffer.put("boatGroundFlags", Math.min(buffer.getInt("boatGroundFlags") + 1, 5));
-                else
-                    buffer.put("boatGroundFlags", Math.max(buffer.getInt("boatGroundFlags") - 1, 0));
-
-                if (buffer.getInt("boatGroundFlags") >= 3)
-                    flagBoat(player, lacPlayer, event, buffer);
+            if (groundTicks <= BOAT_GROUND_GRACE_TICKS || currentTime - buffer.getLong("boatIceTime") < ICE_GRACE_MS) {
+                decayBoatGround(buffer);
+                return;
             }
+
+            double groundExcess = horizontalSpeed - MAX_BOAT_GROUND_SPEED;
+            if (groundExcess > 0.0D) {
+                int boatGroundFlags = buffer.getInt("boatGroundFlags") + (groundExcess > 0.06D ? 2 : 1);
+                buffer.put("boatGroundFlags", Math.min(boatGroundFlags, 6));
+
+                double boatGroundBalance = Math.max(buffer.getDouble("boatGroundBalance") - 20.0D, -250.0D);
+                boatGroundBalance += 40.0D + groundExcess * 320.0D;
+                buffer.put("boatGroundBalance", Math.min(boatGroundBalance, 320.0D));
+            } else {
+                decayBoatGround(buffer);
+            }
+
+            if (buffer.getInt("boatGroundFlags") >= 3 ||
+                    buffer.getDouble("boatGroundBalance") >= BOAT_GROUND_BALANCE_THRESHOLD)
+                flagBoat(player, lacPlayer, event, buffer);
             return;
         }
 
         buffer.put("boatGroundTicks", 0);
-        buffer.put("boatGroundFlags", Math.max(buffer.getInt("boatGroundFlags") - 1, 0));
+        decayBoatGround(buffer);
 
         int airTicks = buffer.getInt("boatAirTicks") + 1;
         buffer.put("boatAirTicks", airTicks);
 
-        double expectedFallVelocity = airTicks == 1 ? buffer.getDouble("boatLastDeltaY") : buffer.getDouble("boatExpectedFallVelocity");
+        double expectedFallVelocity = airTicks == 1 ? previousDeltaY : buffer.getDouble("boatExpectedFallVelocity");
         expectedFallVelocity = (expectedFallVelocity - BOAT_GRAVITY) * BOAT_DRAG;
         buffer.put("boatExpectedFallVelocity", expectedFallVelocity);
 
-        if (airTicks <= 4) {
-            buffer.put("boatAirFlags", Math.max(buffer.getInt("boatAirFlags") - 1, 0));
+        if (airTicks <= BOAT_FLY_GRACE_TICKS) {
+            decayBoatAir(buffer);
             return;
         }
 
-        if (deltaY > expectedFallVelocity + BOAT_FLY_TOLERANCE)
-            buffer.put("boatAirFlags", Math.min(buffer.getInt("boatAirFlags") + 1, 5));
-        else
-            buffer.put("boatAirFlags", Math.max(buffer.getInt("boatAirFlags") - 1, 0));
+        double boatFlyExcess = deltaY - expectedFallVelocity - BOAT_FLY_TOLERANCE;
+        if (boatFlyExcess > 0.0D) {
+            int boatAirFlags = buffer.getInt("boatAirFlags") + (boatFlyExcess > 0.08D ? 2 : 1);
+            buffer.put("boatAirFlags", Math.min(boatAirFlags, 6));
 
-        if (buffer.getInt("boatAirFlags") >= 3)
+            double boatAirBalance = Math.max(buffer.getDouble("boatAirBalance") - 15.0D, -250.0D);
+            boatAirBalance += 35.0D + boatFlyExcess * 500.0D;
+            buffer.put("boatAirBalance", Math.min(boatAirBalance, 320.0D));
+        } else {
+            decayBoatAir(buffer);
+        }
+
+        if (buffer.getInt("boatAirFlags") >= 3 ||
+                buffer.getDouble("boatAirBalance") >= BOAT_AIR_BALANCE_THRESHOLD)
             flagBoat(player, lacPlayer, event, buffer);
     }
 
@@ -200,18 +239,25 @@ public class VehicleA extends MovementCheck implements Listener {
 
         if (!isCheckAllowed(player, lacPlayer, true)) {
             resetLegacy(buffer);
+            resetBoat(buffer, true);
             return;
         }
 
         if (!isConditionAllowed(player, lacPlayer, lacPlayer.cache, false, false, player.isFlying(),
                 player.isInsideVehicle() && player.getVehicle() != null, lacPlayer.isGliding(), lacPlayer.isRiptiding())) {
             resetLegacy(buffer);
+            resetBoat(buffer, true);
             return;
         }
 
         Entity vehicle = player.getVehicle();
-        if (vehicle == null || isBoat(vehicle)) {
+        if (vehicle == null) {
             resetLegacy(buffer);
+            resetBoat(buffer, true);
+            return;
+        }
+        if (isBoat(vehicle)) {
+            boatMovementPacket(player, lacPlayer, vehicle, buffer);
             return;
         }
 
@@ -252,10 +298,7 @@ public class VehicleA extends MovementCheck implements Listener {
         }
 
         boolean flag = false;
-        double horizontalSpeed = Math.min(
-                distanceHorizontal(from, to),
-                distanceHorizontal(previous, to) / 2.0
-        );
+        double horizontalSpeed = getBoatHorizontalSpeed(previous, from, to);
         if (horizontalSpeed > 3.65 * 1.35)
             flag = true;
 
@@ -293,9 +336,165 @@ public class VehicleA extends MovementCheck implements Listener {
         Scheduler.runTask(true, () -> callViolationEventIfRepeat(player, lacPlayer, event.getEvent(), buffer, 1500L));
     }
 
+    private void flagBoat(Player player, LACPlayer lacPlayer, Buffer buffer) {
+        Scheduler.runTask(true, () -> callViolationEventIfRepeat(player, lacPlayer, null, buffer, 1500L));
+    }
+
+    private void boatMovementPacket(Player player, LACPlayer lacPlayer, Entity boat, Buffer buffer) {
+        long currentTime = System.currentTimeMillis();
+        if (boat.isInsideVehicle() ||
+                currentTime - lacPlayer.cache.lastTeleport < 500 ||
+                currentTime - lacPlayer.cache.lastSlimeBlock < 1500 ||
+                currentTime - lacPlayer.cache.lastHoneyBlock < 1500) {
+            resetBoat(buffer, true);
+            return;
+        }
+
+        if (currentTime - buffer.getLong("boatEntityCollisionTime") < BOAT_ENTITY_COLLISION_GRACE_MS) {
+            resetBoat(buffer, true);
+            return;
+        }
+        if (AsyncUtil.getNearbyEntities(boat, 1, 2, 1).size() > 1) {
+            buffer.put("boatEntityCollisionTime", currentTime);
+            resetBoat(buffer, true);
+            return;
+        }
+
+        Location to = boat.getLocation();
+        Location from = buffer.getLocation("boatLocation");
+        Location previous = buffer.getLocation("boatPreviousLocation");
+        buffer.put("boatPreviousLocation", from);
+        buffer.put("boatLocation", to);
+        if (from == null || previous == null)
+            return;
+
+        double previousDeltaY = buffer.getDouble("boatLastDeltaY");
+        double deltaY = distanceVertical(from, to);
+        buffer.put("boatLastDeltaY", deltaY);
+
+        if (hasSolidCollision(boat, from) || hasSolidCollision(boat, to)) {
+            resetBoat(buffer, true);
+            return;
+        }
+
+        double horizontalSpeed = Math.min(
+                distanceHorizontal(from, to),
+                distanceHorizontal(previous, to) / 2.0
+        );
+
+        Set<Block> toDownBlocks = getDownBlocks(boat, to, 0.45);
+        Set<Block> fromDownBlocks = getDownBlocks(boat, from, 0.45);
+        if (isIce(toDownBlocks) || isIce(fromDownBlocks))
+            buffer.put("boatIceTime", currentTime);
+
+        boolean onWater = isTouchingLiquid(boat, from) || isTouchingLiquid(boat, to);
+        if (onWater) {
+            buffer.put("boatGroundTicks", 0);
+            buffer.put("boatAirTicks", 0);
+            buffer.put("boatExpectedFallVelocity", 0.0D);
+            decayBoatAir(buffer);
+            decayBoatGround(buffer);
+            int waterTicks = buffer.getInt("boatWaterTicks") + 1;
+            buffer.put("boatWaterTicks", waterTicks);
+
+            if (waterTicks <= 1 || currentTime - buffer.getLong("boatIceTime") < ICE_GRACE_MS) {
+                decayBoatWater(buffer);
+                return;
+            }
+
+            double waterExcess = horizontalSpeed - MAX_BOAT_WATER_SPEED;
+            if (waterExcess > 0.0D) {
+                int boatWaterFlags = buffer.getInt("boatWaterFlags") + (waterExcess > 0.08D ? 2 : 1);
+                buffer.put("boatWaterFlags", Math.min(boatWaterFlags, 6));
+
+                double boatWaterBalance = Math.max(buffer.getDouble("boatWaterBalance") - 20.0D, -250.0D);
+                boatWaterBalance += 35.0D + waterExcess * 260.0D;
+                buffer.put("boatWaterBalance", Math.min(boatWaterBalance, 320.0D));
+            } else {
+                decayBoatWater(buffer);
+            }
+
+            if (buffer.getInt("boatWaterFlags") >= 3 ||
+                    buffer.getDouble("boatWaterBalance") >= BOAT_WATER_BALANCE_THRESHOLD)
+                flagBoat(player, lacPlayer, buffer);
+            return;
+        }
+
+        buffer.put("boatWaterTicks", 0);
+        decayBoatWater(buffer);
+
+        if (isBoatOnGround(boat, to, true)) {
+            buffer.put("boatAirTicks", 0);
+            buffer.put("boatExpectedFallVelocity", 0.0D);
+            decayBoatAir(buffer);
+            int groundTicks = buffer.getInt("boatGroundTicks") + 1;
+            buffer.put("boatGroundTicks", groundTicks);
+
+            if (groundTicks <= BOAT_GROUND_GRACE_TICKS || currentTime - buffer.getLong("boatIceTime") < ICE_GRACE_MS) {
+                decayBoatGround(buffer);
+                return;
+            }
+
+            double groundExcess = horizontalSpeed - MAX_BOAT_GROUND_SPEED;
+            if (groundExcess > 0.0D) {
+                int boatGroundFlags = buffer.getInt("boatGroundFlags") + (groundExcess > 0.06D ? 2 : 1);
+                buffer.put("boatGroundFlags", Math.min(boatGroundFlags, 6));
+
+                double boatGroundBalance = Math.max(buffer.getDouble("boatGroundBalance") - 20.0D, -250.0D);
+                boatGroundBalance += 40.0D + groundExcess * 320.0D;
+                buffer.put("boatGroundBalance", Math.min(boatGroundBalance, 320.0D));
+            } else {
+                decayBoatGround(buffer);
+            }
+
+            if (buffer.getInt("boatGroundFlags") >= 3 ||
+                    buffer.getDouble("boatGroundBalance") >= BOAT_GROUND_BALANCE_THRESHOLD)
+                flagBoat(player, lacPlayer, buffer);
+            return;
+        }
+
+        buffer.put("boatGroundTicks", 0);
+        decayBoatGround(buffer);
+
+        int airTicks = buffer.getInt("boatAirTicks") + 1;
+        buffer.put("boatAirTicks", airTicks);
+
+        double expectedFallVelocity = airTicks == 1 ? previousDeltaY : buffer.getDouble("boatExpectedFallVelocity");
+        expectedFallVelocity = (expectedFallVelocity - BOAT_GRAVITY) * BOAT_DRAG;
+        buffer.put("boatExpectedFallVelocity", expectedFallVelocity);
+
+        if (airTicks <= BOAT_FLY_GRACE_TICKS) {
+            decayBoatAir(buffer);
+            return;
+        }
+
+        double boatFlyExcess = deltaY - expectedFallVelocity - BOAT_FLY_TOLERANCE;
+        if (boatFlyExcess > 0.0D) {
+            int boatAirFlags = buffer.getInt("boatAirFlags") + (boatFlyExcess > 0.08D ? 2 : 1);
+            buffer.put("boatAirFlags", Math.min(boatAirFlags, 6));
+
+            double boatAirBalance = Math.max(buffer.getDouble("boatAirBalance") - 15.0D, -250.0D);
+            boatAirBalance += 35.0D + boatFlyExcess * 500.0D;
+            buffer.put("boatAirBalance", Math.min(boatAirBalance, 320.0D));
+        } else {
+            decayBoatAir(buffer);
+        }
+
+        if (buffer.getInt("boatAirFlags") >= 3 ||
+                buffer.getDouble("boatAirBalance") >= BOAT_AIR_BALANCE_THRESHOLD)
+            flagBoat(player, lacPlayer, buffer);
+    }
+
     private boolean isBoat(Entity vehicle) {
         return vehicle != null && (vehicle.getType() == EntityType.BOAT ||
                 vehicle.getType().name().equalsIgnoreCase("CHEST_BOAT"));
+    }
+
+    private double getBoatHorizontalSpeed(Location previous, Location from, Location to) {
+        double instantSpeed = distanceHorizontal(from, to);
+        if (previous == null)
+            return instantSpeed;
+        return Math.max(instantSpeed, distanceHorizontal(previous, to) / 2.0D);
     }
 
     private boolean isTouchingLiquid(Entity vehicle, Location location) {
@@ -305,6 +504,18 @@ public class VehicleA extends MovementCheck implements Listener {
         }
         for (Block block : getDownBlocks(vehicle, location, 0.45)) {
             if (block.isLiquid() || block.getRelative(0, -1, 0).isLiquid())
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isBoatOnGround(Entity vehicle, Location location, boolean async) {
+        if (isOnGround(vehicle, 0.08, LeanTowards.FALSE, async))
+            return true;
+        for (Block block : getDownBlocks(vehicle, location, 0.08)) {
+            if (block.isLiquid())
+                continue;
+            if (!isActuallyPassable(block))
                 return true;
         }
         return false;
@@ -321,14 +532,36 @@ public class VehicleA extends MovementCheck implements Listener {
     }
 
     private void resetBoat(Buffer buffer, boolean clearLocations) {
+        buffer.put("boatWaterTicks", 0);
         buffer.put("boatGroundTicks", 0);
         buffer.put("boatGroundFlags", 0);
+        buffer.put("boatGroundBalance", 0.0D);
         buffer.put("boatWaterFlags", 0);
+        buffer.put("boatWaterBalance", 0.0D);
         buffer.put("boatAirTicks", 0);
         buffer.put("boatAirFlags", 0);
+        buffer.put("boatAirBalance", 0.0D);
         buffer.put("boatExpectedFallVelocity", 0.0D);
-        if (clearLocations)
+        if (clearLocations) {
+            buffer.put("boatLocation", null);
             buffer.put("boatPreviousLocation", null);
+            buffer.put("boatLastDeltaY", 0.0D);
+        }
+    }
+
+    private void decayBoatWater(Buffer buffer) {
+        buffer.put("boatWaterFlags", Math.max(buffer.getInt("boatWaterFlags") - 1, 0));
+        buffer.put("boatWaterBalance", Math.max(buffer.getDouble("boatWaterBalance") - 30.0D, -250.0D));
+    }
+
+    private void decayBoatGround(Buffer buffer) {
+        buffer.put("boatGroundFlags", Math.max(buffer.getInt("boatGroundFlags") - 1, 0));
+        buffer.put("boatGroundBalance", Math.max(buffer.getDouble("boatGroundBalance") - 30.0D, -250.0D));
+    }
+
+    private void decayBoatAir(Buffer buffer) {
+        buffer.put("boatAirFlags", Math.max(buffer.getInt("boatAirFlags") - 1, 0));
+        buffer.put("boatAirBalance", Math.max(buffer.getDouble("boatAirBalance") - 25.0D, -250.0D));
     }
 
     private void resetLegacy(Buffer buffer) {

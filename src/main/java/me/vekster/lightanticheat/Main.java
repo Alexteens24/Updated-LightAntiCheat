@@ -22,7 +22,6 @@ import me.vekster.lightanticheat.check.checks.interaction.scaffold.ScaffoldA;
 import me.vekster.lightanticheat.check.checks.interaction.scaffold.ScaffoldB;
 import me.vekster.lightanticheat.check.checks.inventory.sorting.SortingA;
 import me.vekster.lightanticheat.check.checks.inventory.swapping.ItemSwapA;
-import me.vekster.lightanticheat.check.checks.movement.boat.BoatA;
 import me.vekster.lightanticheat.check.checks.movement.elytra.ElytraA;
 import me.vekster.lightanticheat.check.checks.movement.elytra.ElytraB;
 import me.vekster.lightanticheat.check.checks.movement.elytra.ElytraC;
@@ -43,7 +42,6 @@ import me.vekster.lightanticheat.check.checks.movement.vehicle.VehicleA;
 import me.vekster.lightanticheat.check.checks.packet.badpackets.BadPacketsA;
 import me.vekster.lightanticheat.check.checks.packet.badpackets.BadPacketsB;
 import me.vekster.lightanticheat.check.checks.packet.badpackets.BadPacketsC;
-import me.vekster.lightanticheat.check.checks.packet.badpackets.BadPacketsD;
 import me.vekster.lightanticheat.check.checks.packet.morepackets.MorePacketsA;
 import me.vekster.lightanticheat.check.checks.packet.morepackets.MorePacketsB;
 import me.vekster.lightanticheat.check.checks.packet.timer.TimerA;
@@ -120,7 +118,6 @@ public class Main extends JavaPlugin {
         registerCheckListener(new FlightA());
         registerCheckListener(new FlightB());
         registerCheckListener(new FlightC());
-        registerCheckListener(new FlightC());
         registerCheckListener(new LiquidWalkA());
         registerCheckListener(new LiquidWalkB());
         registerCheckListener(new JumpA());
@@ -142,7 +139,6 @@ public class Main extends JavaPlugin {
         registerCheckListener(new SpeedC());
         registerCheckListener(new StepA());
         registerCheckListener(new TridentA());
-        registerCheckListener(new BoatA());
         registerCheckListener(new VehicleA());
         registerCheckListener(new KillAuraA());
         registerCheckListener(new KillAuraB());
@@ -174,7 +170,6 @@ public class Main extends JavaPlugin {
         registerCheckListener(new BadPacketsA());
         registerCheckListener(new BadPacketsB());
         registerCheckListener(new BadPacketsC());
-        registerCheckListener(new BadPacketsD());
         registerCheckListener(new AutoBotA());
         registerCheckListener(new SkinBlinkerA());
     }

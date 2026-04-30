@@ -20,8 +20,7 @@
 * FastClimbA (Speed while climbing)
 * NoSlowA (Speed while in cobweb)
 * StepA (Step hack)
-* BoatA (BoatFly hack, horizontal speed)
-* VehicleA (Other vehicles)
+* VehicleA (BoatFly, boat speed, vehicles)
 * ElytraA (Elytra check)
 * ElytraB (Elytra check)
 * ElytraC (Takeoff without a firework)
@@ -60,7 +59,6 @@
 * BadPacketsA (Protocol check)
 * BadPacketsB (Protocol check)
 * BadPacketsC (Invalid packets)
-* BadPacketsD (Invalid packets)
 
 ## Inventory checks
 * SortingA (Too fast, InventorySorter mod)

@@ -57,12 +57,12 @@ You can add LightAntiCheat's API as a Maven dependency:
 <dependency>
   <groupId>me.vekster</groupId>
   <artifactId>lightanticheat</artifactId>
-  <version>(HotFix) 1.2.7</version>
+  <version>1.2.8</version>
 </dependency>
 ````
 Or use the maven dependency with Gradle:
 ```gradle
 dependencies {
-    compileOnly 'me.vekster:lightanticheat:(HotFix) 1.2.7'
+    compileOnly 'me.vekster:lightanticheat:1.2.8'
 }
 ```

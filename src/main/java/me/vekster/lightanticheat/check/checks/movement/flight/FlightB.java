@@ -24,7 +24,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -144,6 +143,15 @@ public class FlightB extends MovementCheck implements Listener {
         if (currentTime - buffer.getLong("effectTime") <= 2000) {
             buffer.put("flightTicks", 0);
             updateStartLocation(event.getTo(), false, 1.0, buffer);
+            buffer.put("interactiveOffset", 0);
+            return;
+        }
+
+        if (currentTime - buffer.getLong("interactiveBlockTime") < 350L &&
+                distanceHorizontal(event.getFrom(), event.getTo()) > 0.05 &&
+                distanceVertical(event.getFrom(), event.getTo()) > -0.125) {
+            buffer.put("flightTicks", 0);
+            updateStartLocation(event.getTo(), true, 0.0, buffer);
             buffer.put("interactiveOffset", 0);
             return;
         }
@@ -287,6 +295,13 @@ public class FlightB extends MovementCheck implements Listener {
         return eyeLocation.getDirection().setY(0.0D).normalize().angle(vector.normalize()) * 57.2958F;
     }
 
+    private boolean hasInteractiveBlock(Player player, Location location) {
+        for (Block block : getInteractiveBlocks(player, location))
+            if (!isActuallyPassable(block) || !isActuallyPassable(block.getRelative(BlockFace.DOWN)))
+                return true;
+        return false;
+    }
+
     @EventHandler(priority = EventPriority.LOW)
     public void beforeMovement(LACAsyncPlayerMoveEvent event) {
         LACPlayer lacPlayer = event.getLacPlayer();
@@ -308,6 +323,9 @@ public class FlightB extends MovementCheck implements Listener {
 
         if (getEffectAmplifier(lacPlayer.cache, PotionEffectType.JUMP) != 0)
             buffer.put("justEffectTime", System.currentTimeMillis());
+
+        if (hasInteractiveBlock(player, event.getTo()) || hasInteractiveBlock(player, event.getFrom()))
+            buffer.put("interactiveBlockTime", System.currentTimeMillis());
     }
 
     @EventHandler
@@ -405,4 +423,3 @@ public class FlightB extends MovementCheck implements Listener {
     }
 
 }
-

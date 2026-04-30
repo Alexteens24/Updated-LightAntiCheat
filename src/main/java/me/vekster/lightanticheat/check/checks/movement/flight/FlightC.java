@@ -102,6 +102,14 @@ public class FlightC extends MovementCheck implements Listener {
             return;
         }
 
+        if (currentTime - buffer.getLong("interactiveBlockTime") < 350L &&
+                distanceHorizontal(event.getFrom(), event.getTo()) > 0.05 &&
+                distanceVertical(event.getFrom(), event.getTo()) > -0.125) {
+            buffer.put("flightTicks", 0);
+            buffer.put("airJump", 0);
+            return;
+        }
+
         for (int i = 0; i < 3 && i < HistoryElement.values().length; i++)
             if (cache.history.onEvent.onGround.get(HistoryElement.values()[i]).towardsTrue ||
                     cache.history.onPacket.onGround.get(HistoryElement.values()[i]).towardsTrue) {
@@ -239,13 +247,17 @@ public class FlightC extends MovementCheck implements Listener {
         if (!isCheckAllowed(player, lacPlayer, true))
             return;
 
+        Buffer buffer = getBuffer(player, true);
+
         if (getEffectAmplifier(lacPlayer.cache, VerUtil.potions.get("LEVITATION")) > 0 ||
                 getEffectAmplifier(lacPlayer.cache, VerUtil.potions.get("SLOW_FALLING")) > 1 ||
                 getEffectAmplifier(lacPlayer.cache, PotionEffectType.JUMP) > 6) {
-            Buffer buffer = getBuffer(player, true);
             long currentTime = System.currentTimeMillis();
             buffer.put("effectTime", currentTime);
         }
+
+        if (hasInteractiveBlock(player, event.getTo()) || hasInteractiveBlock(player, event.getFrom()))
+            buffer.put("interactiveBlockTime", System.currentTimeMillis());
     }
 
     @EventHandler
@@ -271,6 +283,13 @@ public class FlightC extends MovementCheck implements Listener {
         return block1.getX() == block2.getX() &&
                 block1.getY() == block2.getY() &&
                 block1.getZ() == block2.getZ();
+    }
+
+    private boolean hasInteractiveBlock(Player player, Location location) {
+        for (Block block : getInteractiveBlocks(player, location))
+            if (!isActuallyPassable(block) || !isActuallyPassable(block.getRelative(BlockFace.DOWN)))
+                return true;
+        return false;
     }
 
 }

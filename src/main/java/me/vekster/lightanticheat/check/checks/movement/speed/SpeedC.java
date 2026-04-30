@@ -73,7 +73,7 @@ public class SpeedC extends MovementCheck implements Listener {
         Buffer buffer = getBuffer(player, true);
 
         if (!isCheckAllowed(player, lacPlayer, true)) {
-            buffer.put("speedTicks", 0);
+            resetPrediction(buffer);
             return;
         }
 
@@ -86,25 +86,25 @@ public class SpeedC extends MovementCheck implements Listener {
         }
 
         if (!isConditionAllowed(player, lacPlayer, event)) {
-            buffer.put("speedTicks", 0);
+            resetPrediction(buffer);
             return;
         }
 
         long currentTime = System.currentTimeMillis();
         if (currentTime - buffer.getLong("effectTime") <= 2500) {
-            buffer.put("speedTicks", 0);
+            resetPrediction(buffer);
             return;
         }
         if (currentTime - buffer.getLong("impassableTime") < 700) {
-            buffer.put("speedTicks", 0);
+            resetPrediction(buffer);
             return;
         }
         if (currentTime - buffer.getLong("iceTime") < 2000) {
-            buffer.put("speedTicks", 0);
+            resetPrediction(buffer);
             return;
         }
         if (currentTime - buffer.getLong("soulSpeedTime") < 2000) {
-            buffer.put("speedTicks", 0);
+            resetPrediction(buffer);
             return;
         }
 
@@ -144,17 +144,21 @@ public class SpeedC extends MovementCheck implements Listener {
             return;
 
         if (targetSpeed < finalSpeedLimit) {
-            if (buffer.getInt("localPlayerRaport") <= 0) return;
-            buffer.put("localPlayerRaport", buffer.getInt("localPlayerRaport") - 1);
+            decayPrediction(buffer, buffer.getInt("localAirTicker") == 0 ? 6 : 4, buffer.getInt("localAirTicker") == 0 ? 2 : 1);
+            if (buffer.getInt("localAirTicker") == 0)
+                buffer.put("speedTicks", 0);
             return;
         } else {
-            buffer.put("localPlayerRaport", buffer.getInt("localPlayerRaport") + 3);
+            buffer.put("localPlayerRaport", Math.min(buffer.getInt("localPlayerRaport") + 3, 60));
         }
 
-        if (buffer.getInt("localPlayerRaport") <= 30) return;
+        if (buffer.getInt("localPlayerRaport") <= 30) {
+            buffer.put("flags", Math.max(buffer.getInt("flags") - 1, 0));
+            return;
+        }
 
 
-        buffer.put("flags", buffer.getInt("flags") + 1);
+        buffer.put("flags", Math.min(buffer.getInt("flags") + 1, 6));
         if (buffer.getInt("flags") <= 2 && currentTime - lacPlayer.cache.lastEntityNearby > 1000 ||
                 buffer.getInt("flags") <= 3)
             return;
@@ -180,12 +184,12 @@ public class SpeedC extends MovementCheck implements Listener {
         if (ValhallaMMOHook.isPluginInstalled()) return;
         LACPlayer lacPlayer = event.getLacPlayer();
         Player player = event.getPlayer();
+        Buffer buffer = getBuffer(player, true);
 
         if (!isCheckAllowed(player, lacPlayer, true))
             return;
 
         if (getEffectAmplifier(lacPlayer.cache, PotionEffectType.SPEED) > 5) {
-            Buffer buffer = getBuffer(player, true);
             buffer.put("effectTime", System.currentTimeMillis());
         }
 
@@ -194,6 +198,8 @@ public class SpeedC extends MovementCheck implements Listener {
                 continue;
             if (block.getType().name().endsWith("_SLAB") && !VerUtil.isWatterLoggedSlab(block))
                 continue;
+            buffer.put("impassableTime", System.currentTimeMillis());
+            resetPrediction(buffer);
             return;
         }
 
@@ -203,14 +209,12 @@ public class SpeedC extends MovementCheck implements Listener {
 
         if (downMaterials.contains(Material.ICE) || downMaterials.contains(Material.PACKED_ICE) ||
                 downMaterials.contains(VerUtil.material.get("BLUE_ICE"))) {
-            Buffer buffer = getBuffer(player, true);
             buffer.put("iceTime", System.currentTimeMillis());
         }
 
         if (downMaterials.contains(Material.SOUL_SAND) || downMaterials.contains(VerUtil.material.get("SOUL_SOIL"))) {
             ItemStack boots = lacPlayer.getArmorPiece(EquipmentSlot.FEET);
             if (boots != null && boots.getEnchantmentLevel(VerUtil.enchantment.get("SOUL_SPEED")) != 0) {
-                Buffer buffer = getBuffer(player, true);
                 buffer.put("soulSpeedTime", System.currentTimeMillis());
             }
         }
@@ -221,7 +225,7 @@ public class SpeedC extends MovementCheck implements Listener {
         if (isExternalNPC(event)) return;
         if (ValhallaMMOHook.isPluginInstalled()) return;
         Buffer buffer = getBuffer(event.getPlayer(), true);
-        buffer.put("flags", 0);
+        resetPrediction(buffer);
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -229,7 +233,7 @@ public class SpeedC extends MovementCheck implements Listener {
         if (isExternalNPC(event)) return;
         if (ValhallaMMOHook.isPluginInstalled()) return;
         Buffer buffer = getBuffer(event.getPlayer(), true);
-        buffer.put("flags", 0);
+        resetPrediction(buffer);
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -237,7 +241,19 @@ public class SpeedC extends MovementCheck implements Listener {
         if (isExternalNPC(event)) return;
         if (ValhallaMMOHook.isPluginInstalled()) return;
         Buffer buffer = getBuffer(event.getPlayer(), true);
+        resetPrediction(buffer);
+    }
+
+    private void resetPrediction(Buffer buffer) {
+        buffer.put("speedTicks", 0);
+        buffer.put("localPlayerRaport", 0);
         buffer.put("flags", 0);
+        buffer.put("localAirTicker", 0);
+    }
+
+    private void decayPrediction(Buffer buffer, int reportDecay, int flagDecay) {
+        buffer.put("localPlayerRaport", Math.max(buffer.getInt("localPlayerRaport") - reportDecay, 0));
+        buffer.put("flags", Math.max(buffer.getInt("flags") - flagDecay, 0));
     }
 
 }
