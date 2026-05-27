@@ -5,7 +5,6 @@ import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.event.playermove.LACPlayerMoveEvent;
 import me.vekster.lightanticheat.util.async.AsyncUtil;
 import me.vekster.lightanticheat.util.config.ConfigManager;
-import me.vekster.lightanticheat.util.detection.CheckUtil;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -45,12 +44,11 @@ public class UnloadedChunkListener implements Listener {
 
         if (FROZEN_PLAYERS.contains(uuid)) {
             CHECKABLE_PLAYERS.remove(uuid);
-            event.setCancelled(true);
+            event.setback();
             return;
         }
 
-        if (!event.isPlayerRiptiding() && !event.isPlayerGliding() &&
-                CheckUtil.distanceHorizontal(event.getFrom(), event.getTo()) < 0.35)
+        if (!event.isPlayerRiptiding() && !event.isPlayerGliding())
             return;
 
         CHECKABLE_PLAYERS.add(uuid);

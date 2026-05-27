@@ -4,6 +4,7 @@ import me.vekster.lightanticheat.api.event.LACPunishmentEvent;
 import me.vekster.lightanticheat.api.event.LACViolationEvent;
 import me.vekster.lightanticheat.check.CheckName;
 import me.vekster.lightanticheat.check.CheckSetting;
+import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
 import me.vekster.lightanticheat.player.cache.history.HistoryElement;
 import me.vekster.lightanticheat.player.violation.PlayerViolations;
@@ -107,6 +108,8 @@ public class ViolationHandler implements Listener {
                 event.getCancellable() != null) {
             if (!isVerticalSetback(event.getPlayer(), lacPlayer, checkSetting)) {
                 event.getCancellable().setCancelled(true);
+                if (event.getCancellable() instanceof LACAsyncPlayerMoveEvent)
+                    ((LACAsyncPlayerMoveEvent) event.getCancellable()).setback();
             } else {
                 Location location = event.getPlayer().getLocation();
                 boolean isDownBlocks = true;
