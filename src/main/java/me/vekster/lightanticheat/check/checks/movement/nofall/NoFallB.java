@@ -8,6 +8,7 @@ import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
 import me.vekster.lightanticheat.player.cache.PlayerCache;
 import me.vekster.lightanticheat.player.cache.history.HistoryElement;
+import me.vekster.lightanticheat.util.hook.plugin.FloodgateHook;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
 import me.vekster.lightanticheat.version.VerUtil;
 import org.bukkit.Location;
@@ -121,7 +122,8 @@ public class NoFallB extends MovementCheck implements Listener {
 
         buffer.put("fallEvents", buffer.getInt("fallEvents") + 1);
 
-        if (buffer.getInt("fallEvents") <= 3)
+        boolean bedrockPlayer = FloodgateHook.isBedrockPlayer(player, true);
+        if (buffer.getInt("fallEvents") <= (bedrockPlayer ? 6 : 3))
             return;
 
         if (!((LivingEntity) player).isOnGround())
@@ -130,7 +132,8 @@ public class NoFallB extends MovementCheck implements Listener {
         updateDownBlocks(player, lacPlayer, event.getToDownBlocks());
         int jumpEffectAmplifier = getEffectAmplifier(lacPlayer.cache, PotionEffectType.JUMP);
         Scheduler.runTask(true, () -> {
-            if (jumpEffectAmplifier <= 2) callViolationEventIfRepeat(player, lacPlayer, null, buffer, 3000);
+            if (bedrockPlayer) callViolationEventIfRepeat(player, lacPlayer, null, buffer, 4500);
+            else if (jumpEffectAmplifier <= 2) callViolationEventIfRepeat(player, lacPlayer, null, buffer, 3000);
             else callViolationEventIfRepeat(player, lacPlayer, null, buffer, 600);
         });
     }

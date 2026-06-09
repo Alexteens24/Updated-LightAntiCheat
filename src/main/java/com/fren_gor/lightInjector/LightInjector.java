@@ -31,9 +31,9 @@ import java.util.logging.Level;
 
 public abstract class LightInjector {
 
-    private static final int VERSION;
     private static final String COMPLETE_VERSION;
     private static final String CRAFTBUKKIT_PACKAGE;
+    private static final boolean MODERN_NMS;
     private static final Class<?> NETWORK_MANAGER_CLASS;
     private static final Field GET_PLAYER_CONNECTION;
     private static final Field GET_NETWORK_MANAGER;
@@ -48,9 +48,9 @@ public abstract class LightInjector {
     private final Set<Channel> injectedChannels;
 
     static {
-        VERSION = Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
-        COMPLETE_VERSION = VERSION >= 17 ? null : Bukkit.getServer().getClass().getName().split("\\.")[3];
         CRAFTBUKKIT_PACKAGE = Bukkit.getServer().getClass().getPackage().getName();
+        COMPLETE_VERSION = resolveCraftBukkitVersion(CRAFTBUKKIT_PACKAGE);
+        MODERN_NMS = COMPLETE_VERSION == null || classExists("net.minecraft.server.level.ServerPlayer");
 
         Class<?> entityPlayerClass = getNmsClass("EntityPlayer", "ServerPlayer", "server.level");
         Class<?> playerConnectionClass = getNmsClass("PlayerConnection", "ServerGamePacketListenerImpl", "server.network");
@@ -291,17 +291,47 @@ public abstract class LightInjector {
     }
 
     private static Class<?> getNmsClass(String legacyClassName, String modernClassName, String modernPackage) {
-        String className;
-        if (VERSION >= 17) {
-            className = "net.minecraft." + modernPackage + "." + modernClassName;
+        String modernName = "net.minecraft." + modernPackage + "." + modernClassName;
+        String legacyName = COMPLETE_VERSION != null ?
+                "net.minecraft.server." + COMPLETE_VERSION + "." + legacyClassName : null;
+
+        List<String> candidates = new ArrayList<>();
+        if (MODERN_NMS) {
+            candidates.add(modernName);
+            if (legacyName != null)
+                candidates.add(legacyName);
         } else {
-            className = "net.minecraft.server." + COMPLETE_VERSION + "." + legacyClassName;
+            if (legacyName != null)
+                candidates.add(legacyName);
+            candidates.add(modernName);
         }
 
+        ClassNotFoundException lastException = null;
+        for (String className : candidates) {
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException exception) {
+                lastException = exception;
+            }
+        }
+        throw new RuntimeException("[LightInjector] Can not find class! (" + String.join(", ", candidates) + ")", lastException);
+    }
+
+    private static String resolveCraftBukkitVersion(String packageName) {
+        String prefix = "org.bukkit.craftbukkit.";
+        if (!packageName.startsWith(prefix))
+            return null;
+
+        String version = packageName.substring(prefix.length());
+        return version.matches("v\\d+_\\d+_R\\d+") ? version : null;
+    }
+
+    private static boolean classExists(String className) {
         try {
-            return Class.forName(className);
-        } catch (ClassNotFoundException exception) {
-            throw new RuntimeException("[LightInjector] Can not find class! (" + className + ")", exception);
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException ignored) {
+            return false;
         }
     }
 

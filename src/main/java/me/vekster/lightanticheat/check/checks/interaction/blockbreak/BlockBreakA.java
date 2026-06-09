@@ -81,10 +81,18 @@ public class BlockBreakA extends InteractionCheck implements Listener {
     private boolean flag(Player player, LACPlayer lacPlayer, Block block, Location eyeLocation, boolean async) {
         if (!isCheckAllowed(player, lacPlayer, async))
             return false;
+        if (block == null || eyeLocation == null || block.getWorld() != eyeLocation.getWorld() ||
+                player.getWorld() != block.getWorld())
+            return false;
 
         boolean flag = true;
         Location blockLocation = block.getLocation();
-        Block targetBlock = lacPlayer.getTargetBlockExact(10);
+        Block targetBlock;
+        try {
+            targetBlock = lacPlayer.getTargetBlockExact(10);
+        } catch (IllegalStateException ignored) {
+            return false;
+        }
         if (targetBlock != null)
             if (distanceHorizontal(blockLocation, targetBlock.getLocation()) <= 3.5)
                 flag = false;
@@ -98,7 +106,12 @@ public class BlockBreakA extends InteractionCheck implements Listener {
             if (targetBlock != null)
                 transparent.add(targetBlock.getType());
 
-            List<Block> lineOfSight = player.getLineOfSight(transparent, 10);
+            List<Block> lineOfSight;
+            try {
+                lineOfSight = player.getLineOfSight(transparent, 10);
+            } catch (IllegalStateException ignored) {
+                return false;
+            }
             for (Block block1 : lineOfSight) {
                 if (distanceHorizontal(blockLocation, block1.getLocation()) <= 3.0) {
                     flag = false;

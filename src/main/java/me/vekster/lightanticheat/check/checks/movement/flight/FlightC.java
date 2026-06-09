@@ -167,7 +167,7 @@ public class FlightC extends MovementCheck implements Listener {
                     if (!isBedrockPlayer)
                         callViolationEventIfRepeat(player, lacPlayer, event, buffer, Main.getBufferDurationMils() - 1000L);
                     else
-                        callViolationEventIfRepeat(player, lacPlayer, event, buffer, 2000L);
+                        callViolationEventIfRepeat(player, lacPlayer, event, buffer, 2500L);
                 });
                 return;
             }
@@ -206,9 +206,9 @@ public class FlightC extends MovementCheck implements Listener {
                     callViolationEventIfRepeat(player, lacPlayer, event, buffer, 750);
             } else {
                 if (System.currentTimeMillis() - buffer.getLong("lastGlidingLagPossibleTime") < 5 * 1000)
-                    callViolationEventIfRepeat(player, lacPlayer, event, buffer, 250);
+                    callViolationEventIfRepeat(player, lacPlayer, event, buffer, 900);
                 else
-                    callViolationEventIfRepeat(player, lacPlayer, event, buffer, 400);
+                    callViolationEventIfRepeat(player, lacPlayer, event, buffer, 1500);
             }
         });
     }

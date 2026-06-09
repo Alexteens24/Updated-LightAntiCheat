@@ -9,10 +9,12 @@ import me.vekster.lightanticheat.event.playerattack.LACPlayerAttackEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
 import me.vekster.lightanticheat.util.hook.plugin.FloodgateHook;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * 1. Hitting more than one target per tick
@@ -65,7 +67,8 @@ public class KillAuraD extends CombatCheck implements Listener {
         if (currentTime - buffer.getLong("lastFlag") <= 750) return;
         else buffer.put("lastFlag", currentTime);
 
-        if (getItemStackAttributes(player, "PLAYER_SWEEPING_DAMAGE_RATIO") != 0 ||
+        if (hasSweepingEdge(player) ||
+                getItemStackAttributes(player, "PLAYER_SWEEPING_DAMAGE_RATIO") != 0 ||
                 getPlayerAttributes(player).getOrDefault("PLAYER_SWEEPING_DAMAGE_RATIO", 0.0) > 0.01)
             buffer.put("attribute", System.currentTimeMillis());
         if (System.currentTimeMillis() - buffer.getLong("attribute") < 2000)
@@ -74,6 +77,17 @@ public class KillAuraD extends CombatCheck implements Listener {
         Scheduler.runTask(true, () -> {
             callViolationEventIfRepeat(player, lacPlayer, null, buffer, 5000);
         });
+    }
+
+    private boolean hasSweepingEdge(Player player) {
+        ItemStack itemStack = player.getInventory().getItemInHand();
+        if (itemStack == null)
+            return false;
+        for (Enchantment enchantment : itemStack.getEnchantments().keySet())
+            if (enchantment.getName().equalsIgnoreCase("SWEEPING_EDGE") ||
+                    enchantment.getName().equalsIgnoreCase("SWEEPING"))
+                return true;
+        return false;
     }
 
     @EventHandler

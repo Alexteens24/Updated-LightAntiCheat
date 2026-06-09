@@ -17,6 +17,7 @@ import me.vekster.lightanticheat.version.VerUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -99,7 +100,7 @@ public class SpeedC extends MovementCheck implements Listener {
             resetPrediction(buffer);
             return;
         }
-        if (currentTime - buffer.getLong("iceTime") < 2000) {
+        if (currentTime - buffer.getLong("iceTime") < 5000) {
             resetPrediction(buffer);
             return;
         }
@@ -208,8 +209,11 @@ public class SpeedC extends MovementCheck implements Listener {
         downMaterials.addAll(event.getFromDownMaterials());
 
         if (downMaterials.contains(Material.ICE) || downMaterials.contains(Material.PACKED_ICE) ||
-                downMaterials.contains(VerUtil.material.get("BLUE_ICE"))) {
+                downMaterials.contains(VerUtil.material.get("BLUE_ICE")) ||
+                downMaterials.contains(VerUtil.material.get("FROSTED_ICE")) ||
+                hasIceBelow(event.getToDownBlocks()) || hasIceBelow(event.getFromDownBlocks())) {
             buffer.put("iceTime", System.currentTimeMillis());
+            resetPrediction(buffer);
         }
 
         if (downMaterials.contains(Material.SOUL_SAND) || downMaterials.contains(VerUtil.material.get("SOUL_SOIL"))) {
@@ -254,6 +258,19 @@ public class SpeedC extends MovementCheck implements Listener {
     private void decayPrediction(Buffer buffer, int reportDecay, int flagDecay) {
         buffer.put("localPlayerRaport", Math.max(buffer.getInt("localPlayerRaport") - reportDecay, 0));
         buffer.put("flags", Math.max(buffer.getInt("flags") - flagDecay, 0));
+    }
+
+    private boolean hasIceBelow(Set<Block> blocks) {
+        for (Block block : blocks)
+            if (isIce(block.getType()) || isIce(block.getRelative(BlockFace.DOWN).getType()))
+                return true;
+        return false;
+    }
+
+    private boolean isIce(Material material) {
+        return material == Material.ICE || material == Material.PACKED_ICE ||
+                material == VerUtil.material.get("BLUE_ICE") ||
+                material == VerUtil.material.get("FROSTED_ICE");
     }
 
 }

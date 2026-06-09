@@ -28,6 +28,16 @@ public class PassableUtil extends GroundUtil {
     }
 
     public static boolean isActuallyPassable(Block block) {
+        if (block == null)
+            return false;
+        try {
+            return isActuallyPassable0(block);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    private static boolean isActuallyPassable0(Block block) {
         String downBlockName = block.getRelative(BlockFace.DOWN).getType().name().toLowerCase();
         if (downBlockName.endsWith("_wall") || downBlockName.endsWith("_fence") ||
                 downBlockName.endsWith("_fence_gate") || downBlockName.endsWith("shulker_box") ||

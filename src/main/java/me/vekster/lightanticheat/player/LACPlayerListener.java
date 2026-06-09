@@ -128,6 +128,8 @@ public class LACPlayerListener implements Listener {
     public void eventHistory(LACAsyncPlayerMoveEvent event) {
         Player player = event.getPlayer();
         LACPlayer lacPlayer = event.getLacPlayer();
+        if (!isReadyForAsyncHistory(player, lacPlayer))
+            return;
         lacPlayer.cache.history.onEvent.location.add(event.getFrom());
         Set<Block> downBlocks = CheckUtil.getDownBlocks(player, 0.15);
         lacPlayer.cache.history.onEvent.onGround
@@ -141,6 +143,8 @@ public class LACPlayerListener implements Listener {
             return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = event.getLacPlayer();
+        if (!isReadyForAsyncHistory(player, lacPlayer))
+            return;
         lacPlayer.cache.history.onPacket.location.add(event.getPlayer().getLocation());
         Set<Block> downBlocks = CheckUtil.getDownBlocks(player, 0.15);
         lacPlayer.cache.history.onPacket.onGround
@@ -150,6 +154,8 @@ public class LACPlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void activePotionEffects(LACAsyncPlayerMoveEvent event) {
+        if (!isReadyForAsyncHistory(event.getPlayer(), event.getLacPlayer()))
+            return;
         Map<PotionEffectType, PotionEffect> potionEffects = new ConcurrentHashMap<>();
         for (PotionEffect potionEffect : event.getPlayer().getActivePotionEffects())
             potionEffects.put(potionEffect.getType(), potionEffect);
@@ -476,6 +482,8 @@ public class LACPlayerListener implements Listener {
     public void lastSwing(LACAsyncPacketReceiveEvent event) {
         if (event.getPacketType() != PacketType.ARM_ANIMATION)
             return;
+        if (!isReadyForAsyncHistory(event.getPlayer(), event.getLacPlayer()))
+            return;
         event.getLacPlayer().cache.lastSwingTime = System.currentTimeMillis();
     }
 
@@ -759,6 +767,14 @@ public class LACPlayerListener implements Listener {
 
     private static void setAsyncPlayers(Map<UUID, LACPlayer> asyncPlayers) {
         LACPlayerListener.asyncPlayers = asyncPlayers;
+    }
+
+    private static boolean isReadyForAsyncHistory(Player player, LACPlayer lacPlayer) {
+        return player != null && lacPlayer != null && player.isOnline() && lacPlayer.leaveTime == 0L &&
+                lacPlayer.cache != null && lacPlayer.cache.history != null &&
+                lacPlayer.cache.history.onEvent != null && lacPlayer.cache.history.onPacket != null &&
+                lacPlayer.cache.history.onEvent.location != null && lacPlayer.cache.history.onEvent.onGround != null &&
+                lacPlayer.cache.history.onPacket.location != null && lacPlayer.cache.history.onPacket.onGround != null;
     }
 
 }

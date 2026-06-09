@@ -8,6 +8,7 @@ import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
 import me.vekster.lightanticheat.player.cache.PlayerCache;
 import me.vekster.lightanticheat.player.cache.history.HistoryElement;
+import me.vekster.lightanticheat.util.hook.plugin.FloodgateHook;
 import me.vekster.lightanticheat.util.hook.plugin.simplehook.EnchantsSquaredHook;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
 import me.vekster.lightanticheat.version.VerUtil;
@@ -169,7 +170,8 @@ public class NoFallA extends MovementCheck implements Listener {
             return;
         }
 
-        if (buffer.getInt("fallEvents") <= 1)
+        boolean bedrockPlayer = FloodgateHook.isBedrockPlayer(player, true);
+        if (buffer.getInt("fallEvents") <= (bedrockPlayer ? 3 : 1))
             return;
 
         int fallEvents = buffer.getInt("fallEvents");
@@ -232,6 +234,8 @@ public class NoFallA extends MovementCheck implements Listener {
             playerFallDistance += 0.5;
         if (System.currentTimeMillis() - buffer.getLong("interactiveBlockTime") < 250)
             playerFallDistance += 0.75;
+        if (bedrockPlayer)
+            playerFallDistance += 1.0F;
         playerFallDistance = (float) (playerFallDistance * 1.2 + 0.35);
         if (playerFallDistance > calculatedFallDistance)
             return;
@@ -247,7 +251,7 @@ public class NoFallA extends MovementCheck implements Listener {
             if (isEnchantsSquaredImpact(players) && finalPlayerFallDistance * 1.5 + 1.2 > calculatedFallDistance)
                 return;
 
-            callViolationEventIfRepeat(player, lacPlayer, event, buffer, 1500);
+            callViolationEventIfRepeat(player, lacPlayer, event, buffer, bedrockPlayer ? 2500 : 1500);
         });
     }
 

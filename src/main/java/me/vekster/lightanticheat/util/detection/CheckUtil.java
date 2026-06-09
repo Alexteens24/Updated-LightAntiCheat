@@ -73,6 +73,8 @@ public class CheckUtil extends PassableUtil {
             return false;
         if (FloodgateHook.isCancelledCombat(checkSetting.name, player, async))
             return false;
+        if (FloodgateHook.isCancelledMovement(checkSetting.name, player, async))
+            return false;
 
         CheckName checkName = checkSetting.name;
         if (!async) {

@@ -121,17 +121,17 @@ public class CriticalsB extends CombatCheck implements Listener {
             return;
 
         Set<Integer> minHeights = ConcurrentHashMap.newKeySet();
-        Scheduler.runTaskLater(() -> {
+        Scheduler.runTaskLater(player, () -> {
             if (!player.isOnline() || LACPlayer.getLacPlayer(player) == null)
                 return;
             minHeights.add(getMinDownHeight(getDownBlocks(player, 0.1), true));
 
-            Scheduler.runTaskLater(() -> {
+            Scheduler.runTaskLater(player, () -> {
                 if (!player.isOnline() || LACPlayer.getLacPlayer(player) == null)
                     return;
                 minHeights.add(getMinDownHeight(getDownBlocks(player, 0.1), true));
 
-                Scheduler.runTaskLater(() -> {
+                Scheduler.runTaskLater(player, () -> {
                     if (!player.isOnline() || LACPlayer.getLacPlayer(player) == null)
                         return;
                     minHeights.add(getMinDownHeight(getDownBlocks(player, 0.1), true));

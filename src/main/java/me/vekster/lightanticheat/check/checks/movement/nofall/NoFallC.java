@@ -7,6 +7,7 @@ import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
 import me.vekster.lightanticheat.player.cache.PlayerCache;
 import me.vekster.lightanticheat.util.detection.LeanTowards;
+import me.vekster.lightanticheat.util.hook.plugin.FloodgateHook;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
 import me.vekster.lightanticheat.version.VerUtil;
 import org.bukkit.GameMode;
@@ -76,6 +77,7 @@ public class NoFallC extends MovementCheck implements Listener {
         PlayerCache cache = lacPlayer.cache;
         Player player = event.getPlayer();
         Buffer buffer = getBuffer(player, true);
+        boolean bedrockPlayer = FloodgateHook.isBedrockPlayer(player, true);
 
         if (!isCheckAllowed(player, lacPlayer, true) ||
                 !isConditionAllowed(player, lacPlayer, event) ||
@@ -95,12 +97,16 @@ public class NoFallC extends MovementCheck implements Listener {
         double fallDistance = buffer.getDouble("fallDistance");
         float serverFallDistance = player.getFallDistance();
         boolean wasNearGround = !buffer.isExists("wasNearGround") || buffer.getBoolean("wasNearGround");
+        double minimumFallDistance = bedrockPlayer ? MINIMUM_FALL_DISTANCE + 1.0D : MINIMUM_FALL_DISTANCE;
+        double minimumSpoofDistance = bedrockPlayer ? 3.25D : 2.5D;
+        int minimumFlags = bedrockPlayer ? 4 : 3;
+        long damageWait = bedrockPlayer ? DAMAGE_WAIT_MS * 2L : DAMAGE_WAIT_MS;
 
         if (!nearGround && deltaY < 0.0D)
             fallDistance += -deltaY;
 
         if (nearGround && !wasNearGround) {
-            if (fallDistance >= MINIMUM_FALL_DISTANCE) {
+            if (fallDistance >= minimumFallDistance) {
                 buffer.put("expectingDamage", true);
                 buffer.put("expectDamageSince", System.currentTimeMillis());
             }
@@ -109,7 +115,7 @@ public class NoFallC extends MovementCheck implements Listener {
             fallDistance = 0.0D;
         } else {
             boolean fallingFast = deltaY < -0.08D;
-            boolean bigFall = fallDistance > 2.5D;
+            boolean bigFall = fallDistance > minimumSpoofDistance;
             double lastServerFallDistance = buffer.getDouble("lastServerFallDistance");
             boolean resetDetected = serverFallDistance == 0.0F ||
                     lastServerFallDistance > 2.0D && serverFallDistance + 0.25F < lastServerFallDistance;
@@ -119,15 +125,17 @@ public class NoFallC extends MovementCheck implements Listener {
             else
                 buffer.put("flags", Math.max(buffer.getInt("flags") - 1, 0));
 
-            if (buffer.getInt("flags") >= 3) {
-                Scheduler.runTask(true, () -> callViolationEventIfRepeat(player, lacPlayer, event, buffer, 1500L));
+            if (buffer.getInt("flags") >= minimumFlags) {
+                Scheduler.runTask(true, () -> callViolationEventIfRepeat(player, lacPlayer, event, buffer,
+                        bedrockPlayer ? 2500L : 1500L));
                 buffer.put("flags", 0);
             }
         }
 
         if (buffer.getBoolean("expectingDamage") &&
-                System.currentTimeMillis() - buffer.getLong("expectDamageSince") > DAMAGE_WAIT_MS) {
-            Scheduler.runTask(true, () -> callViolationEventIfRepeat(player, lacPlayer, event, buffer, 2000L));
+                System.currentTimeMillis() - buffer.getLong("expectDamageSince") > damageWait) {
+            Scheduler.runTask(true, () -> callViolationEventIfRepeat(player, lacPlayer, event, buffer,
+                    bedrockPlayer ? 3500L : 2000L));
             buffer.put("expectingDamage", false);
         }
 

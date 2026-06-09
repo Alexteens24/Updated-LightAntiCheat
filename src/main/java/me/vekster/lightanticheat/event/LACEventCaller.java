@@ -23,6 +23,7 @@ import me.vekster.lightanticheat.version.identifier.LACVersion;
 import me.vekster.lightanticheat.version.identifier.VerIdentifier;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -44,6 +45,35 @@ public class LACEventCaller extends LightInjector implements Listener {
         super(Main.getInstance());
     }
 
+    private static boolean isPlayerReady(Player player, LACPlayer lacPlayer) {
+        return player != null && lacPlayer != null && player.isOnline() && lacPlayer.leaveTime == 0L &&
+                lacPlayer.cache != null && lacPlayer.cooldown != null && lacPlayer.violations != null;
+    }
+
+    private static void callAsyncEvent(Player player, LACPlayer lacPlayer, Event event) {
+        if (FoliaUtil.isFolia()) {
+            Scheduler.entityThread(player, () -> callEventIfReady(player, lacPlayer, event));
+            return;
+        }
+        Scheduler.runTaskAsynchronously(false, () -> {
+            callEventIfReady(player, lacPlayer, event);
+        });
+    }
+
+    private static void callAsyncEventFromEntityThread(Player player, LACPlayer lacPlayer, Event event) {
+        if (FoliaUtil.isFolia()) {
+            callEventIfReady(player, lacPlayer, event);
+            return;
+        }
+        callAsyncEvent(player, lacPlayer, event);
+    }
+
+    private static void callEventIfReady(Player player, LACPlayer lacPlayer, Event event) {
+        if (!isPlayerReady(player, lacPlayer))
+            return;
+        PLUGIN_MANAGER.callEvent(event);
+    }
+
     public static void callMovementEvents(PlayerMoveEvent event) {
         if (CheckUtil.isExternalNPC(event))
             return;
@@ -51,14 +81,14 @@ public class LACEventCaller extends LightInjector implements Listener {
             return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (!isPlayerReady(player, lacPlayer))
+            return;
         LACPlayerMoveEvent lacPlayerMoveEvent = new LACPlayerMoveEvent(event, player, lacPlayer, event.getFrom(), event.getTo());
         Scheduler.entityThread(player, () -> {
             if (!FoliaUtil.isStable(player))
                 return;
             PLUGIN_MANAGER.callEvent(lacPlayerMoveEvent);
-            Scheduler.runTaskAsynchronously(true, () -> {
-                PLUGIN_MANAGER.callEvent(new LACAsyncPlayerMoveEvent(lacPlayerMoveEvent));
-            });
+            callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerMoveEvent(lacPlayerMoveEvent));
         });
     }
 
@@ -71,13 +101,13 @@ public class LACEventCaller extends LightInjector implements Listener {
         if (CheckUtil.isExternalNPC(event.getEntity()))
             return;
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (!isPlayerReady(player, lacPlayer))
+            return;
         Scheduler.entityThread(player, () -> {
             if (!FoliaUtil.isStable(player))
                 return;
             PLUGIN_MANAGER.callEvent(new LACPlayerAttackEvent(event, player, lacPlayer, event.getEntity()));
-            Scheduler.runTaskAsynchronously(true, () -> {
-                PLUGIN_MANAGER.callEvent(new LACAsyncPlayerAttackEvent(player, lacPlayer, event.getEntity().getEntityId()));
-            });
+            callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerAttackEvent(player, lacPlayer, event.getEntity().getEntityId()));
         });
     }
 
@@ -86,15 +116,15 @@ public class LACEventCaller extends LightInjector implements Listener {
             return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (!isPlayerReady(player, lacPlayer))
+            return;
         LACPlayerPlaceBlockEvent lacPlayerPlaceBlockEvent = new LACPlayerPlaceBlockEvent(event, player, lacPlayer,
                 event.getBlock(), event.getBlockAgainst(), event.getBlockReplacedState());
         Scheduler.entityThread(player, () -> {
             if (!FoliaUtil.isStable(player))
                 return;
             PLUGIN_MANAGER.callEvent(lacPlayerPlaceBlockEvent);
-            Scheduler.runTaskAsynchronously(true, () -> {
-                PLUGIN_MANAGER.callEvent(new LACAsyncPlayerPlaceBlockEvent(lacPlayerPlaceBlockEvent));
-            });
+            callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerPlaceBlockEvent(lacPlayerPlaceBlockEvent));
         });
     }
 
@@ -103,14 +133,14 @@ public class LACEventCaller extends LightInjector implements Listener {
             return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (!isPlayerReady(player, lacPlayer))
+            return;
         LACPlayerBreakBlockEvent lacPlayerBreakBlockEvent = new LACPlayerBreakBlockEvent(event, player, lacPlayer, event.getBlock());
         Scheduler.entityThread(player, () -> {
             if (!FoliaUtil.isStable(player))
                 return;
             PLUGIN_MANAGER.callEvent(lacPlayerBreakBlockEvent);
-            Scheduler.runTaskAsynchronously(true, () -> {
-                PLUGIN_MANAGER.callEvent(new LACAsyncPlayerBreakBlockEvent(lacPlayerBreakBlockEvent));
-            });
+            callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerBreakBlockEvent(lacPlayerBreakBlockEvent));
         });
     }
 
@@ -119,19 +149,14 @@ public class LACEventCaller extends LightInjector implements Listener {
         if (!ConfigManager.Config.enabled) return nmsPacket;
         if (sender == null) return nmsPacket;
         LACPlayer lacPlayer = LACPlayerListener.getAsyncPlayers().getOrDefault(sender.getUniqueId(), null);
-        if (lacPlayer == null || lacPlayer.leaveTime != 0L || !sender.isOnline())
+        if (!isPlayerReady(sender, lacPlayer))
             return nmsPacket;
         LACAsyncPacketReceiveEvent event = new LACAsyncPacketReceiveEvent(sender, lacPlayer, nmsPacket);
         if (event.getPacketType() == PacketType.USE_ENTITY && VerIdentifier.getVersion().isNewerThan(LACVersion.V1_8)) {
-            PLUGIN_MANAGER.callEvent(new LACAsyncPlayerAttackEvent(event.getPlayer(), event.getLacPlayer(), event.getEntityId()));
+            callAsyncEvent(event.getPlayer(), event.getLacPlayer(),
+                    new LACAsyncPlayerAttackEvent(event.getPlayer(), event.getLacPlayer(), event.getEntityId()));
         }
-        if (event.getPacketType() == PacketType.FLYING) {
-            Scheduler.runTaskAsynchronously(true, () -> {
-                PLUGIN_MANAGER.callEvent(event);
-            });
-        } else {
-            PLUGIN_MANAGER.callEvent(event);
-        }
+        callAsyncEvent(event.getPlayer(), event.getLacPlayer(), event);
         return nmsPacket;
     }
 

@@ -39,8 +39,11 @@ public class VerIdentifier {
             return fromMinorVersion(Integer.parseInt(legacyMatcher.group(1)));
 
         Matcher modernMatcher = MODERN_VERSION_PATTERN.matcher(version);
-        if (modernMatcher.find())
-            return fromMinorVersion(Integer.parseInt(modernMatcher.group(2)));
+        if (modernMatcher.find()) {
+            int majorVersion = Integer.parseInt(modernMatcher.group(1));
+            int minorVersion = Integer.parseInt(modernMatcher.group(2));
+            return fromMinorVersion(majorVersion == 1 ? minorVersion : majorVersion);
+        }
 
         return LACVersion.V1_20;
     }
