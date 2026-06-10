@@ -43,6 +43,7 @@ public class ReachB extends CombatCheck implements Listener {
             return;
 
         double maxReach = 3.0;
+        maxReach += getSpearReachBonus(player);
 
         double eventBackwardsDistance = 0;
         if (distance(cache.history.onEvent.location.get(HistoryElement.FROM), entity.getLocation()) <

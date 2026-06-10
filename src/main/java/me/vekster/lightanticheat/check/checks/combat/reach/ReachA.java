@@ -45,6 +45,7 @@ public class ReachA extends CombatCheck implements Listener {
         double distance = distanceHorizontal(player.getEyeLocation(), entity.getLocation()) - hixboxOffset;
 
         double maxReach = 3.0;
+        maxReach += getSpearReachBonus(player);
 
         double eventBackwardsDistance = 0;
         if (distanceHorizontal(cache.history.onEvent.location.get(HistoryElement.FROM), entity.getLocation()) <

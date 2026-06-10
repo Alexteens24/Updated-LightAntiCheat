@@ -3,12 +3,15 @@ package me.vekster.lightanticheat.check.checks.combat;
 import me.vekster.lightanticheat.check.Check;
 import me.vekster.lightanticheat.check.CheckName;
 import me.vekster.lightanticheat.util.async.AsyncUtil;
+import me.vekster.lightanticheat.version.VerPlayer;
 import me.vekster.lightanticheat.version.VerUtil;
+import me.vekster.lightanticheat.version.identifier.VerIdentifier;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.HashSet;
@@ -37,6 +40,17 @@ public abstract class CombatCheck extends Check {
         if (player == null || entity == null)
             return -1;
         return AABB.from(entity).collidesD(Ray.from(player), 0, 16);
+    }
+
+    protected double getSpearReachBonus(Player player) {
+        if (!VerIdentifier.isVersionAtLeast(1, 21, 11))
+            return 0.0D;
+        ItemStack itemStack = VerPlayer.getItemInMainHand(player);
+        if (itemStack == null || itemStack.getType() == null)
+            return 0.0D;
+
+        String materialName = itemStack.getType().name();
+        return materialName.equals("SPEAR") || materialName.endsWith("_SPEAR") ? 1.5D : 0.0D;
     }
 
     /**

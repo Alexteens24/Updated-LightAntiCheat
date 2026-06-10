@@ -21,6 +21,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -70,6 +72,11 @@ public class VehicleA extends MovementCheck implements Listener {
         LACPlayer lacPlayer = event.getLacPlayer();
         Player player = event.getPlayer();
         Buffer buffer = getBuffer(player);
+        Entity boat = getMountedVehicle(player);
+        if (boat == null) {
+            resetBoat(buffer, true);
+            return;
+        }
 
         if (!isCheckAllowed(player, lacPlayer) ||
                 !isConditionAllowed(player, lacPlayer, event, false, false)) {
@@ -77,7 +84,6 @@ public class VehicleA extends MovementCheck implements Listener {
             return;
         }
 
-        Entity boat = player.getVehicle();
         if (!isBoat(boat)) {
             resetBoat(buffer, true);
             return;
@@ -236,6 +242,7 @@ public class VehicleA extends MovementCheck implements Listener {
         LACPlayer lacPlayer = event.getLacPlayer();
         Player player = event.getPlayer();
         Buffer buffer = getBuffer(player, true);
+        Entity vehicle = getMountedVehicle(player);
 
         if (!isCheckAllowed(player, lacPlayer, true)) {
             resetLegacy(buffer);
@@ -244,13 +251,12 @@ public class VehicleA extends MovementCheck implements Listener {
         }
 
         if (!isConditionAllowed(player, lacPlayer, lacPlayer.cache, false, false, player.isFlying(),
-                player.isInsideVehicle() && player.getVehicle() != null, lacPlayer.isGliding(), lacPlayer.isRiptiding())) {
+                vehicle != null, lacPlayer.isGliding(), lacPlayer.isRiptiding())) {
             resetLegacy(buffer);
             resetBoat(buffer, true);
             return;
         }
 
-        Entity vehicle = player.getVehicle();
         if (vehicle == null) {
             resetLegacy(buffer);
             resetBoat(buffer, true);
@@ -483,6 +489,32 @@ public class VehicleA extends MovementCheck implements Listener {
         if (buffer.getInt("boatAirFlags") >= 3 ||
                 buffer.getDouble("boatAirBalance") >= BOAT_AIR_BALANCE_THRESHOLD)
             flagBoat(player, lacPlayer, buffer);
+    }
+
+    private Entity getMountedVehicle(Player player) {
+        if (!player.isInsideVehicle())
+            return null;
+        Entity vehicle = player.getVehicle();
+        if (vehicle == null || !isPassenger(player, vehicle))
+            return null;
+        return vehicle;
+    }
+
+    private boolean isPassenger(Player player, Entity vehicle) {
+        try {
+            Method getPassengers = vehicle.getClass().getMethod("getPassengers");
+            Object passengers = getPassengers.invoke(vehicle);
+            if (passengers instanceof Collection)
+                return ((Collection<?>) passengers).contains(player);
+        } catch (ReflectiveOperationException ignored) {
+        }
+
+        try {
+            Method getPassenger = vehicle.getClass().getMethod("getPassenger");
+            return player.equals(getPassenger.invoke(vehicle));
+        } catch (ReflectiveOperationException ignored) {
+            return true;
+        }
     }
 
     private boolean isBoat(Entity vehicle) {

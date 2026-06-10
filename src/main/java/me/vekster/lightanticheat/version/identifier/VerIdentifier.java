@@ -10,7 +10,9 @@ public class VerIdentifier {
 
     private static final Pattern LEGACY_VERSION_PATTERN = Pattern.compile("v1_(\\d+)");
     private static final Pattern MODERN_VERSION_PATTERN = Pattern.compile("(\\d+)\\.(\\d+)");
+    private static final Pattern EXACT_VERSION_PATTERN = Pattern.compile("(\\d+)\\.(\\d+)(?:\\.(\\d+))?");
     private static LACVersion serverVersion = null;
+    private static int[] serverVersionParts = null;
 
     public static LACVersion getVersion() {
         if (serverVersion != null)
@@ -46,6 +48,46 @@ public class VerIdentifier {
         }
 
         return LACVersion.V1_20;
+    }
+
+    public static boolean isVersionAtLeast(int major, int minor, int patch) {
+        int[] versionParts = getVersionParts();
+        if (versionParts[0] != major)
+            return versionParts[0] > major;
+        if (versionParts[1] != minor)
+            return versionParts[1] > minor;
+        return versionParts[2] >= patch;
+    }
+
+    private static int[] getVersionParts() {
+        if (serverVersionParts != null)
+            return serverVersionParts;
+
+        String version = resolveServerVersion();
+        Matcher exactMatcher = EXACT_VERSION_PATTERN.matcher(version);
+        if (exactMatcher.find()) {
+            serverVersionParts = new int[]{
+                    Integer.parseInt(exactMatcher.group(1)),
+                    Integer.parseInt(exactMatcher.group(2)),
+                    exactMatcher.group(3) == null ? 0 : Integer.parseInt(exactMatcher.group(3))
+            };
+            return serverVersionParts;
+        }
+
+        Matcher legacyMatcher = LEGACY_VERSION_PATTERN.matcher(version);
+        if (legacyMatcher.find()) {
+            serverVersionParts = new int[]{1, Integer.parseInt(legacyMatcher.group(1)), 0};
+            return serverVersionParts;
+        }
+
+        LACVersion lacVersion = getVersion();
+        String[] fallbackParts = lacVersion.name().substring(1).split("_");
+        serverVersionParts = new int[]{
+                Integer.parseInt(fallbackParts[0]),
+                Integer.parseInt(fallbackParts[1]),
+                0
+        };
+        return serverVersionParts;
     }
 
     private static LACVersion fromMinorVersion(int minorVersion) {
