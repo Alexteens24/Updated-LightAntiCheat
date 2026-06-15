@@ -10,6 +10,7 @@ version = 'HotFix-1.2.9'
 repositories {
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/groups/public/' }
+    maven { url 'https://repo.tcoded.com/releases' }
     maven { url 'https://repo.opencollab.dev/main/' }
     maven { url 'https://nexuslite.gcnt.net/repos/other/' }
 }
@@ -20,7 +21,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
     compileOnly files('comp/spigot-1.8.8-R0.1-SNAPSHOT-latest.jar')
     compileOnly 'io.netty:netty-all:4.2.3.Final'
-    implementation 'com.tcoded:FoliaLib:0.4.2'
+    implementation 'com.tcoded:FoliaLib:0.5.2'
     compileOnly 'org.geysermc.floodgate:api:2.2.3-SNAPSHOT'
     implementation 'com.tchristofferson:ConfigUpdater:2.2'
     implementation fileTree('impl/multiversion')

@@ -1,6 +1,7 @@
 package me.vekster.lightanticheat.util.hook.server.folia;
 
 import com.tcoded.folialib.FoliaLib;
+import com.tcoded.folialib.util.FoliaLibOptions;
 import me.vekster.lightanticheat.Main;
 import me.vekster.lightanticheat.util.async.AsyncUtil;
 import org.bukkit.Bukkit;
@@ -27,7 +28,9 @@ public class FoliaUtil {
         }
 
         if (isFolia()) {
-            foliaLib = new FoliaLib(Main.getInstance());
+            FoliaLibOptions options = new FoliaLibOptions();
+            options.disableNotifications();
+            foliaLib = new FoliaLib(Main.getInstance(), options);
 
             runTaskTimer(() -> {
                 Map<UUID, List<FLocation>> players = new ConcurrentHashMap<>();
@@ -46,6 +49,14 @@ public class FoliaUtil {
                 FoliaUtil.players = players;
             }, 1, 1);
         }
+    }
+
+    public static void shutdown() {
+        if (foliaLib == null)
+            return;
+        foliaLib.getScheduler().cancelAllTasks();
+        foliaLib = null;
+        players = new ConcurrentHashMap<>();
     }
 
     public static boolean isFolia() {
@@ -82,45 +93,45 @@ public class FoliaUtil {
     }
 
     public static void runTask(Runnable runnable) {
-        foliaLib.getImpl().runNextTick(wrappedTask -> runnable.run());
+        foliaLib.getScheduler().runNextTick(wrappedTask -> runnable.run());
     }
 
     public static void runTask(Entity entity, Runnable runnable) {
-        foliaLib.getImpl().runAtEntity(entity, wrappedTask -> runnable.run());
+        foliaLib.getScheduler().runAtEntity(entity, wrappedTask -> runnable.run());
     }
 
     public static void runTaskAsynchronously(Runnable runnable) {
-        foliaLib.getImpl().runAsync(wrappedTask -> runnable.run());
+        foliaLib.getScheduler().runAsync(wrappedTask -> runnable.run());
     }
 
 
     public static void runTaskLater(Runnable runnable, long delayInTicks) {
-        foliaLib.getImpl().runLater(runnable, delayInTicks);
+        foliaLib.getScheduler().runLater(runnable, delayInTicks);
     }
 
     public static void runTaskLater(Entity entity, Runnable runnable, long delayInTicks) {
-        foliaLib.getImpl().runAtEntityLater(entity, runnable, delayInTicks);
+        foliaLib.getScheduler().runAtEntityLater(entity, runnable, delayInTicks);
     }
 
     public static void runTaskLaterAsynchronously(Runnable runnable, long delayInTicks) {
-        foliaLib.getImpl().runLaterAsync(runnable, delayInTicks);
+        foliaLib.getScheduler().runLaterAsync(runnable, delayInTicks);
     }
 
     public static void runTaskTimer(Runnable task, long delayInTicks, long periodInTicks) {
-        foliaLib.getImpl().runTimer(task, delayInTicks, periodInTicks);
+        foliaLib.getScheduler().runTimer(task, delayInTicks, periodInTicks);
     }
 
     public static void runTaskTimer(Entity entity, Runnable task, long delayInTicks, long periodInTicks) {
-        foliaLib.getImpl().runAtEntityTimer(entity, task, delayInTicks, periodInTicks);
+        foliaLib.getScheduler().runAtEntityTimer(entity, task, delayInTicks, periodInTicks);
     }
 
     public static void runTaskTimerAsynchronously(Runnable task, long delayInTicks, long periodInTicks) {
-        foliaLib.getImpl().runTimerAsync(task, delayInTicks, periodInTicks);
+        foliaLib.getScheduler().runTimerAsync(task, delayInTicks, periodInTicks);
     }
 
     public static void teleportPlayer(Player player, Location location) {
         if (!isFolia()) player.teleport(location);
-        else foliaLib.getImpl().teleportAsync(player, location);
+        else foliaLib.getScheduler().teleportAsync(player, location);
     }
 
     public static class FLocation {
