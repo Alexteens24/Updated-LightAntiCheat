@@ -3,13 +3,15 @@ package me.vekster.lightanticheat.check.checks.packet.timer;
 import me.vekster.lightanticheat.check.CheckName;
 import me.vekster.lightanticheat.check.buffer.Buffer;
 import me.vekster.lightanticheat.check.checks.packet.PacketCheck;
-import me.vekster.lightanticheat.event.packetrecive.LACAsyncPacketReceiveEvent;
-import me.vekster.lightanticheat.event.packetrecive.packettype.PacketType;
 import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
+import me.vekster.lightanticheat.player.cache.PlayerCache;
 import me.vekster.lightanticheat.util.hook.plugin.FloodgateHook;
+import me.vekster.lightanticheat.util.tps.TPSCalculator;
+import me.vekster.lightanticheat.version.VerPlayer;
 import me.vekster.lightanticheat.version.identifier.LACVersion;
 import me.vekster.lightanticheat.version.identifier.VerIdentifier;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,32 +20,67 @@ import org.bukkit.event.Listener;
  * Timer hack
  */
 public class TimerA extends PacketCheck implements Listener {
+    private static final long NEGATIVE_BALANCE_LIMIT = -800L;
+    private static final long BASE_BALANCE_THRESHOLD = 125L;
+    private static final long THRESHOLD_INCREMENT = 50L;
+    private static final long PACKET_INCREMENT = 50L;
+
     public TimerA() {
         super(CheckName.TIMER_A);
     }
 
     @EventHandler
-    public void onAsyncPacketReceive(LACAsyncPacketReceiveEvent event) {
+    public void onAsyncMovement(LACAsyncPlayerMoveEvent event) {
         Player player = event.getPlayer();
         LACPlayer lacPlayer = event.getLacPlayer();
-
-        if (event.getPacketType() != PacketType.FLYING)
-            return;
+        PlayerCache cache = lacPlayer.cache;
 
         if (!isCheckAllowed(player, lacPlayer, true))
-            return;
-
-        if (FloodgateHook.isProbablyPocketEditionPlayer(player, true))
             return;
 
         Buffer buffer = getBuffer(player, true);
         long currentTime = System.currentTimeMillis();
 
-        if (!buffer.getBoolean("moved") || currentTime - lacPlayer.joinTime < 2000)
-            return;
+        boolean positionChanged = distance(event.getFrom(), event.getTo()) > 0.0D;
+        boolean rotationChanged = event.getFrom().getYaw() != event.getTo().getYaw() ||
+                event.getFrom().getPitch() != event.getTo().getPitch();
+        if (positionChanged || rotationChanged)
+            buffer.put("moved", true);
 
-        if (VerIdentifier.getVersion().isOlderOrEqualsTo(LACVersion.V1_8) && currentTime - lacPlayer.joinTime < 12000)
+        if (!buffer.getBoolean("moved") || currentTime - lacPlayer.joinTime < 5000L) {
+            resetTiming(buffer, currentTime, true);
             return;
+        }
+
+        if (VerIdentifier.getVersion().isOlderOrEqualsTo(LACVersion.V1_8) && currentTime - lacPlayer.joinTime < 12000L) {
+            resetTiming(buffer, currentTime, true);
+            return;
+        }
+
+        int ping = VerPlayer.getPing(player, true);
+        double tps = TPSCalculator.getTPS();
+        if (ping > 300 || tps < 18.5D || TPSCalculator.getTickDurationInMs() > 150L) {
+            resetTiming(buffer, currentTime, false);
+            buffer.put("largeDelayGrace", 5);
+            decay(buffer, 0.5D);
+            return;
+        }
+
+        if (isNearWeb(event)) {
+            resetTiming(buffer, currentTime, true);
+            buffer.put("largeDelayGrace", 5);
+            decay(buffer, 0.05D);
+            return;
+        }
+
+        if (currentTime - cache.lastTeleport < 1000L ||
+                currentTime - cache.lastWorldChange < 1000L ||
+                currentTime - cache.lastGamemodeChange < 2500L ||
+                currentTime - cache.lastRespawn < 1500L) {
+            resetTiming(buffer, currentTime, true);
+            buffer.put("largeDelayGrace", 3);
+            return;
+        }
 
         if (player.isInsideVehicle()) {
             buffer.put("skipVehiclePacket", !buffer.getBoolean("skipVehiclePacket"));
@@ -51,65 +88,86 @@ public class TimerA extends PacketCheck implements Listener {
                 return;
         }
 
-        if (System.currentTimeMillis() - lacPlayer.cache.lastWindCharge < 3000 ||
-                System.currentTimeMillis() - lacPlayer.cache.lastWindChargeReceive < 1000) {
-            buffer.put("skipVehiclePacket", !buffer.getBoolean("skipVehiclePacket"));
-            if (!buffer.getBoolean("skipVehiclePacket"))
-                return;
-        }
-
-        if (!buffer.isExists("lastTime") || !buffer.isExists("packets") ||
-                !buffer.isExists("packetsBalancer") || !buffer.isExists("balancerTime"))
-            buffer.put("lastNonExistingFieldTime", currentTime);
-
-        long difference = currentTime - buffer.getLong("lastTime");
-        buffer.put("packets", buffer.getInt("packets") + 1);
-        buffer.put("packetsBalancer", buffer.getInt("packetsBalancer") + 1);
-        if (difference >= 1000) {
+        long lastTime = buffer.getLong("lastTime");
+        if (lastTime == 0L) {
             buffer.put("lastTime", currentTime);
-            buffer.put("balancerTime", buffer.getInt("balancerTime") + (21 - buffer.getInt("packetsBalancer")));
-            buffer.put("packets", 0);
-            buffer.put("packetsBalancer", 0);
             return;
         }
-        if (buffer.getInt("balancerTime") > 0) {
-            buffer.put("balancerTime", buffer.getInt("balancerTime") - 1);
-            buffer.put("packets", buffer.getInt("packets") - 1);
+
+        long elapsed = currentTime - lastTime;
+        buffer.put("lastTime", currentTime);
+        if (elapsed < 1L)
+            elapsed = 1L;
+
+        boolean bedrockPlayer = FloodgateHook.isBedrockPlayer(player, true) ||
+                FloodgateHook.isProbablyPocketEditionPlayer(player, true);
+        long pingAllowance = Math.min(175L, Math.max(0L, ping - 50L) / 2L);
+        long tpsAllowance = (long) Math.ceil(Math.max(0.0D, 20.0D - Math.min(20.0D, tps)) * 35.0D);
+        long bedrockAllowance = bedrockPlayer ? 175L : 0L;
+        long dynamicThreshold = BASE_BALANCE_THRESHOLD + pingAllowance + tpsAllowance + bedrockAllowance;
+
+        long balanceThreshold = buffer.getLong("balanceThreshold");
+        if (balanceThreshold < dynamicThreshold)
+            balanceThreshold = dynamicThreshold;
+
+        long newBalance = buffer.getLong("timerBalance") + PACKET_INCREMENT - elapsed;
+        if (elapsed > 250L) {
+            buffer.put("timerBalance", Math.max(NEGATIVE_BALANCE_LIMIT, newBalance));
+            buffer.put("largeDelayGrace", 5);
+            buffer.put("balanceThreshold", balanceThreshold);
             return;
         }
-        if (buffer.getInt("packets") > (VerIdentifier.getVersion().isNewerThan(LACVersion.V1_8) ? 28 : 35)) {
-            if (currentTime - lacPlayer.joinTime > 10 * 1000)
-                localFlag(buffer, player, lacPlayer);
-            buffer.put("packets", buffer.getInt("packets") - 2);
+        if (elapsed > 120L) {
+            buffer.put("timerBalance", Math.max(NEGATIVE_BALANCE_LIMIT, newBalance));
+            buffer.put("largeDelayGrace", 3);
+            buffer.put("balanceThreshold", balanceThreshold);
+            return;
         }
+
+        if (buffer.getInt("largeDelayGrace") > 0) {
+            buffer.put("timerBalance", Math.max(NEGATIVE_BALANCE_LIMIT, newBalance));
+            buffer.put("largeDelayGrace", buffer.getInt("largeDelayGrace") - 1);
+            buffer.put("balanceThreshold", balanceThreshold);
+            return;
+        }
+
+        if (newBalance > balanceThreshold) {
+            if (currentTime - buffer.getLong("lastInvalidTime") > 750L) {
+                buffer.put("lastInvalidTime", currentTime);
+                flag(player, lacPlayer);
+            }
+            balanceThreshold += THRESHOLD_INCREMENT;
+        } else {
+            if (balanceThreshold > dynamicThreshold && newBalance < dynamicThreshold / 2L)
+                balanceThreshold--;
+            decay(buffer, 0.02D);
+        }
+
+        buffer.put("timerBalance", Math.max(NEGATIVE_BALANCE_LIMIT, newBalance));
+        buffer.put("balanceThreshold", balanceThreshold);
     }
 
-    @EventHandler
-    public void onAsyncMovement(LACAsyncPlayerMoveEvent event) {
-        if (distance(event.getFrom(), event.getTo()) == 0)
+    private void resetTiming(Buffer buffer, long currentTime, boolean resetBalance) {
+        buffer.put("lastTime", currentTime);
+        if (!resetBalance)
             return;
-        Buffer buffer = getBuffer(event.getPlayer(), true);
-        buffer.put("moved", true);
+        buffer.put("timerBalance", 0L);
+        buffer.put("balanceThreshold", BASE_BALANCE_THRESHOLD);
     }
 
-    private void localFlag(Buffer buffer, Player player, LACPlayer lacPlayer) {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - buffer.getLong("lastNonExistingFieldTime") <= 2000)
-            return;
-
-        if (currentTime - buffer.getLong("localFlagTime") > 2000) {
-            buffer.put("localFlagTime", currentTime);
-            buffer.put("localFlags", 0);
-        }
-        buffer.put("localFlags", buffer.getInt("localFlags") + 1);
-        if (buffer.getInt("localFlags") <= 2)
-            return;
-
-        if (currentTime - buffer.getLong("lastFlagTime") <= 2000)
-            return;
-
-        flag(player, lacPlayer);
-        buffer.put("lastFlagTime", currentTime);
+    private boolean isNearWeb(LACAsyncPlayerMoveEvent event) {
+        return hasWeb(event.getFromWithinMaterials()) || hasWeb(event.getToWithinMaterials()) ||
+                hasWeb(event.getFromDownMaterials()) || hasWeb(event.getToDownMaterials());
     }
 
+    private boolean hasWeb(Iterable<Material> materials) {
+        for (Material material : materials)
+            if (material != null && material.name().contains("WEB"))
+                return true;
+        return false;
+    }
+
+    private void decay(Buffer buffer, double amount) {
+        buffer.put("violations", Math.max(buffer.getDouble("violations") - amount, 0.0D));
+    }
 }

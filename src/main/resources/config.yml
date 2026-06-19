@@ -1,227 +1,143 @@
 enabled: true
-
-## Customizable plugin messages
 messages:
-  prefix: "&8(&#FF450ELight&8)&f"
-  # Hex colors are supported since MC 1.16. Example: &#FF450E
-  # In MC 1.13-1.15, the hex colors are replaced with the nearest Bukkit colors
+  prefix: '&#FF450ELight &8&l»&f'
   hex-color-codes: true
-  # A local placeholder is a placeholder that can only be used in the following message
-  # All the global placeholder can be found below
   command-messages:
     help:
-      message: "%prefix% LightAntiCheat %version% is running"
+      message: '%prefix% LightAntiCheat &8(&#FF450E%version%&8) &fIs Running&7.'
     reload:
-      # Local placeholders: %time%
-      message: "%prefix% Successfully reloaded the config &7(%time%ms)"
+      message: '%prefix% Successfully Reloaded The Config File In &8(&#FF450E%time%ms&8)&7.'
     alerts:
-      toggled-on-message: "%prefix% Alerts are enabled!"
-      toggled-off-message: "%prefix% Alerts are disabled!"
+      toggled-on-message: '%prefix% Alerts Enabled&7.'
+      toggled-off-message: '%prefix% Alerts Disabled&7.'
     tps:
-      # Local placeholders: %tps%
-      message: "%prefix% TPS from the last 30 seconds: &f%tps%"
+      message: '%prefix% TPS From The Last 30s&7: &8(&#FF450E%tps%&8)&7.'
     ping:
-      # Local placeholders: %ping%, %connection-stability%
-      message: "%prefix% %name%&7's ping is &f%ping% &7(&f%connection-stability%&7 stability)"
+      message: '%prefix% &7%name%&7''s &fPing Is &8(&#FF450E%ping%ms&8) &8[&f%connection-stability%&8]&7.'
       connection-stability:
-        high: "&ahigh&r"
-        medium: "&emedium&r"
-        low: "&clow&r"
+        high: '&2High&r'
+        medium: '&6Medium&r'
+        low: '&4Low&r'
     client:
-      # Local placeholders: %client-brand%
-      message: "%prefix% %name%&7's client is &f%client-brand%"
+      message: '%prefix% &7%name%&7''s &fClient Is &8(&#FF450E%client-brand%&8)&7.'
     cps:
-      # Local placeholders: %cps%
-      message: "%prefix% %name%&7's CPS is &f%cps%"
+      message: '%prefix% %name%&7''s CPS Is &8(&#FF450E%cps%&8)&7.'
     checks:
-      # Local placeholders: %checks%, %movement_checks%, %combat_checks%,
-      # %interaction_checks%, %inventory_checks%, %packet_checks%
-      message: "%prefix% Checks: %checks%"
+      message: '%prefix% Checks&7: &#FF450E%checks%'
   error-messages:
-    no-permission: "%prefix% You don't have enough permissions"
-    # Local placeholders: %usage%
-    invalid-format: "%prefix% Usage: &7%usage%"
-
-## In game notifications of violations or/and punishments
+    no-permission: '%prefix% You Don''t Have Permission To Execute This Command&7.'
+    invalid-format: '%prefix% Usage&7: &f &7%usage%'
 alerts:
   broadcast-violations:
     enabled: true
-    message: "%prefix% %name% was flagged for %check% (%vio%/%punishment-vio%)"
-    # Broadcasts violations of a player no more than 1 time in X ms
+    message: '%prefix% &7%name% &fFailed &#FF450E%check% &8[&#FF450E%vio%&7/&#FF450E%punishment-vio%&8]
+      &7| &8[&#FF450EPing&7: &#FF450E%ping%&8] [&#FF450ETps&7: &#FF450E%tps%&8]'
     cooldown: 0
-    # Leave this field empty not to hover any text
-    on-hover: "&7Check: &#FF450E%check% (%check-description%)%new-line%&7World: &#FF450E%world%%new-line%&7Cords: &#FF450E%x% %y% %z%%new-line%&7Client: &#FF450E%client-brand%"
-    # Local placeholders: %teleport-location%
-    on-click: "/light teleport %teleport-location%"
+    on-hover: '&fCheck&7: &#FF450E%check% &8(&#FF450E%check-description%&8)%new-line%&fWorld&7:
+      &#FF450E%world%%new-line%&fCoordinates&7: &#FF450E%x% %y% %z%%new-line%&fClient&7:
+      &#FF450E%client-brand%'
+    on-click: /light teleport %teleport-location%
   broadcast-punishments:
     enabled: true
-    message: "%prefix% %name% was punished for %check%"
-    # Broadcasts punishments of a player no more than 1 time in X ms
+    message: '%prefix% &7%name% &fWas Punished For&7: &#FF450EUNFAIR ADVANTAGE'
     cooldown: 0
-    # Leave this field empty not to hover any text
-    on-hover: "&7Check: &#FF450E%check% (%check-description%)%new-line%&7World: &#FF450E%world%%new-line%&7Cords: &#FF450E%x% %y% %z%%new-line%&7Client: &#FF450E%client-brand%"
-    # Local placeholders: %teleport-location%
-    on-click: "/light teleport %teleport-location%"
-
-## Log file
+    on-hover: '&fCheck&7: &#FF450E%check% &8(&#FF450E%check-description%&8)%new-line%&fWorld&7:
+      &#FF450E%world%%new-line%&fCoordinates&7: &#FF450E%x% %y% %z%%new-line%&fClient&7:
+      &#FF450E%client-brand%'
+    on-click: /light teleport %teleport-location%
 log:
   enabled: true
-  file: "logs/%date-day%.log"
-  # Global placeholders: %prefix%, %version%, %name%, %uuid%, %ip%,
-  # %check%, %check-type%, %check-description%
-  # %vio%, %punishment-vio%, %setback-vio%,
-  # %tps%, %%edition%, %ping%, %connection-stability%,
-  # %world%, %x%, %y%, %z%, %client-brand%
-  # %date-day%, %date-hrs%, %date-min%, %date-sec%
+  file: logs/%date-day%.log
   log-violations:
     enabled: true
-    message: "(%date-sec%) %name% was flagged [Check: %check% (%check-description%)] [Violations: %vio%/%punishment-vio%] [TPS: %tps%] [Ping: %ping%ms (%connection-stability% stability)] [Client: %client-brand%] [Location: %world% %x% %y% %z%]"
-    # Logs violations of a player no more than every X 1 time in X ms
+    message: '(%date-sec%) %name% Failed [Check: %check% (%check-description%)] [Violations:
+      %vio%/%punishment-vio%] [TPS: %tps%] [Ping: %ping%ms (%connection-stability% stability)]
+      [Client: %client-brand%] [Location: %world% %x% %y% %z%]'
     cooldown: 1000
   log-punishments:
     enabled: true
-    message: "(%date-sec%) %name% was punished [Check: %check% (%check-description%)] [Violations: %vio%/%punishment-vio%] [TPS: %tps%]  [Ping: %ping%ms (%connection-stability% stability)] [Client: %client-brand%] [Location: %world% %x% %y% %z%]"
-    # Logs punishments of a player no more frequently than 1 time in X ms
+    message: '(%date-sec%) %name% Was Punished [Check: %check% (%check-description%)]
+      [Violations: %vio%/%punishment-vio%] [TPS: %tps%]  [Ping: %ping%ms (%connection-stability%
+      stability)] [Client: %client-brand%] [Location: %world% %x% %y% %z%]'
     cooldown: 0
-
-## Discord notifications of violations or/and punishments
 discord-webhook:
   enabled: false
-  # You can create a webhook for your Discord server in
-  # Server Settings -> Integrations -> Webhooks -> New Webhook
   send-violations:
     enabled: false
-    webhook-url: ""
-    message: "```%name% was flagged for %check% (%check-description%) (%vio%/%punishment-vio%)```"
+    webhook-url: ''
+    message: '```%name% Failed %check% (%check-description%) (%vio%/%punishment-vio%)```'
     cooldown: 2000
   send-punishments:
     enabled: false
-    #This url can either be the same as the first one or different
-    webhook-url: ""
-    message: "```%name% was punished for %check% (%check-description%)```"
+    webhook-url: ''
+    message: '```%name% Was Punished For %check% (%check-description%)```'
     cooldown: 0
-
-## Bypass permissions
 permission:
-  # 'lightanticheat.bypess.flight_a' is a specific bypass permission
-  # Whether the specific bypass permissions should be enabled
   per-check-bypass-permission: false
-  # If set to 'true', all the bypass permissions are disabled
   disable-all-bypass-permissions: false
-
-## Violation reset
 violation:
   reset:
-    # The interval in which violations are reset
     reset-interval: 180
   cache:
     enabled: true
-    # Saves the player's violations for X seconds after the player leaves
-    # If set to '0', the player's violation are reset when player quits
     cache-duration: 180
-
-## Lag conditions under which the detection should be disabled
 lag-protection:
-  # Stops the checks if the server doesn't respond for X ms
   tick-threshold: 1000
-  # Disables the checks on join for X ms
-  ignore-time-on-join: 0
-  # Disables the checks on teleportation to unloaded chunks for X ms
+  ignore-time-on-join: 500
   ignore-time-on-teleport: 0
-  # Prevents gliding and riptiding players from entering into unloaded chunks
   prevent-entering-into-unloaded-chucks: true
-  # Slightly improves accuracy in laggy conditions
   prioritize-accuracy: true
-
-## Basically, there is no need to configure 'geyser-hook' selection,
-## unless the Geyser player linking is enabled and uses a local database
 geyser-hook:
   enabled: true
   floodgate:
-    # Whether a player marked with Floodgate API 2.0+ counted as Bedrock players
     enabled: true
   uuid:
-    # Whether a player whose UUID starts with '000000' counted as Bedrock players
     enabled: true
   prefix:
-    # Whether a player whose name starts with the prefix counted as Bedrock players
     enabled: true
-    prefix-string: "."
-
-## The update checker will let you know if a newer version is available
+    prefix-string: .
 update-checker:
   enabled: false
   notification:
     console:
       enabled: false
-      # Local placeholders: %latest-version%
-      message: "%prefix% LightAntiCheat %latest-version% is available!"
+      message: '%prefix% LightAntiCheat &8(&#FF450E%latest-version%&8) Is Available&7.'
     on-join:
       enabled: false
-      # Local placeholders: %latest-version%
-      message: "%prefix% LightAntiCheat %latest-version% is available!"
-      # Whether 'lightanticheat.alerts.notify' permission should be required
+      message: '%prefix% LightAntiCheat &8(&#FF450E%latest-version%&8) Is Available&7.'
       require-permission: true
-
-# BStats is an anonymous way of getting the average metrics of the servers
-# running the plugin. Check out LightAntiCheat's page on 'bstats.org'
 bstats:
-  # The plugin is completely free, and it's always nice to know that
-  # it's useful for someone. If you care, don't disable the metrics
   enabled: true
-
-## It's not recommended to disable the API unless it causes any issues
 api:
-  # Whether the developer API is enabled
-  # The API may be used be other plugins
   enabled: true
-
 checks:
-  # Movement checks
   movement:
     flight:
       flight_a:
-        # Whether this check is enabled
         enabled: true
-        # The punishment commands
         punishment:
-          # Should the punishment commands be executed
-          punishable: true
-          # After X violations, the punishment commands are run
-          punishment-vio: 40
-          # The commands
+          punishable: false
+          punishment-vio: 20
           commands:
-            - "kick %name% %check%"
-        # The setback feature
+          - kick %name% Unfair Advantage
         setback:
-          # If set to 'true', the player will be frozen on getting a violation
-          # Notes: It's NOT recommended to use the setback because
-          # 1. It will notify the hackers making the checks easier to bypass
-          # 2. Using a punishment command is simply more efficient
           setback: false
-          # After X violations, the player's actions should be cancelled
-          setback-vio: 21
-        # Exempts from flight_a check if the conditions are not satisfied
+          setback-vio: 0
         detection:
-          # If the server's TPS is lower than X, this check is bypassed
           min-tps: 5.0
-          # If the player's ping is higher than X, this check is bypassed
-          # The ping can't be higher than 10,000
           max-ping: 10000
-          # Should the Java players be checked
           java: true
-          # Should the players who joined via Geyser be checked
           bedrock: true
       flight_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 40
+          punishable: false
+          punishment-vio: 20
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 21
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -230,13 +146,13 @@ checks:
       flight_c:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 40
+          punishable: false
+          punishment-vio: 20
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 21
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -246,13 +162,13 @@ checks:
       speed_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 30
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 16
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -261,13 +177,13 @@ checks:
       speed_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 35
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 18
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -276,13 +192,13 @@ checks:
       speed_c:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 40
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 21
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -291,13 +207,13 @@ checks:
       speed_d:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 30
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 16
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -306,13 +222,13 @@ checks:
       speed_e:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 30
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 16
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -321,13 +237,13 @@ checks:
       speed_f:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 50
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 26
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -337,13 +253,13 @@ checks:
       nofall_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 20
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 17
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -352,13 +268,13 @@ checks:
       nofall_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 25
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 22
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -367,13 +283,13 @@ checks:
       nofall_c:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 20
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 17
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -383,13 +299,13 @@ checks:
       jump_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 20
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 7
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -398,13 +314,13 @@ checks:
       jump_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 20
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 11
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -414,13 +330,13 @@ checks:
       liquidwalk_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 40
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 21
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -429,13 +345,13 @@ checks:
       liquidwalk_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 40
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 21
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -445,13 +361,13 @@ checks:
       fastclimb_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 25
+          punishable: false
+          punishment-vio: 15
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 13
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -461,13 +377,13 @@ checks:
       noslow_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 25
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 13
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -477,13 +393,28 @@ checks:
       step_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 4
+          setback-vio: 0
+        detection:
+          min-tps: 5.0
+          max-ping: 10000
+          java: true
+          bedrock: true
+      step_b:
+        enabled: true
+        punishment:
+          punishable: false
+          punishment-vio: 5
+          commands:
+          - kick %name% Unfair Advantage
+        setback:
+          setback: false
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -493,13 +424,13 @@ checks:
       vehicle_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 35
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 18
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -509,13 +440,13 @@ checks:
       elytra_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 40
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 21
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -524,13 +455,13 @@ checks:
       elytra_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 40
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 21
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -539,13 +470,13 @@ checks:
       elytra_c:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 12
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 10
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -555,31 +486,30 @@ checks:
       trident_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 7
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
           java: true
           bedrock: true
-  # Combat checks
   combat:
     killaura:
       killaura_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 6
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 4
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -588,13 +518,13 @@ checks:
       killaura_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 8
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 5
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -603,13 +533,13 @@ checks:
       killaura_c:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 4
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 3
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -618,13 +548,13 @@ checks:
       killaura_d:
         enabled: true
         punishment:
-          punishable: true
+          punishable: false
           punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 1
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -634,13 +564,13 @@ checks:
       reach_a:
         enabled: true
         punishment:
-          punishable: true
+          punishable: false
           punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 6
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -649,13 +579,13 @@ checks:
       reach_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 6
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 4
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -665,13 +595,13 @@ checks:
       criticals_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 1
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 1
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -680,13 +610,13 @@ checks:
       criticals_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 1
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -696,13 +626,13 @@ checks:
       autoclicker_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -711,13 +641,13 @@ checks:
       autoclicker_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -727,31 +657,30 @@ checks:
       velocity_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 12
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 7
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
           java: true
           bedrock: true
-  # Interaction checks
   interaction:
     airplace:
       airplace_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -761,13 +690,13 @@ checks:
       fastplace_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -777,13 +706,13 @@ checks:
       blockplace_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 10
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 6
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -792,13 +721,13 @@ checks:
       blockplace_b:
         enabled: true
         punishment:
-          punishable: true
+          punishable: false
           punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 3
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -808,13 +737,13 @@ checks:
       ghostbreak_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -824,13 +753,13 @@ checks:
       fastbreak_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 15
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 8
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -840,13 +769,13 @@ checks:
       blockbreak_a:
         enabled: true
         punishment:
-          punishable: true
+          punishable: false
           punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 6
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -855,13 +784,13 @@ checks:
       blockbreak_b:
         enabled: true
         punishment:
-          punishable: true
+          punishable: false
           punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 3
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -871,13 +800,13 @@ checks:
       scaffold_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 10
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 6
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -886,31 +815,30 @@ checks:
       scaffold_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 10
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 6
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
           java: true
           bedrock: true
-  # Packet checks
   packet:
     morepackets:
       morepackets_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 2
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 1
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -919,13 +847,13 @@ checks:
       morepackets_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 2
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 1
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -935,28 +863,13 @@ checks:
       timer_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 10
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
-        detection:
-          min-tps: 5.0
-          max-ping: 10000
-          java: true
-          bedrock: true
-      timer_b:
-        enabled: true
-        punishment:
-          punishable: true
-          punishment-vio: 3
-          commands:
-            - "kick %name% %check%"
-        setback:
-          setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -966,13 +879,13 @@ checks:
       badpackets_a:
         enabled: true
         punishment:
-          punishable: true
+          punishable: false
           punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 4
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -981,13 +894,13 @@ checks:
       badpackets_b:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 20
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 19
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -996,31 +909,30 @@ checks:
       badpackets_c:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 10
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 9
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
           java: true
           bedrock: true
-  # Inventory checks
   inventory:
     sorting:
       sorting_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -1030,31 +942,30 @@ checks:
       itemswap_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 4
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 3
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
           java: true
           bedrock: true
-  # Player checks
   player:
     autobot:
       autobot_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 3
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 2
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000
@@ -1064,13 +975,13 @@ checks:
       skinblinker_a:
         enabled: true
         punishment:
-          punishable: true
-          punishment-vio: 2
+          punishable: false
+          punishment-vio: 5
           commands:
-            - "kick %name% %check%"
+          - kick %name% Unfair Advantage
         setback:
           setback: false
-          setback-vio: 1
+          setback-vio: 0
         detection:
           min-tps: 5.0
           max-ping: 10000

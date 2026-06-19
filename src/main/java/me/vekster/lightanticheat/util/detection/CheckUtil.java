@@ -31,10 +31,27 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 public class CheckUtil extends PassableUtil {
+    private static final String[][] ATTRIBUTE_ALIASES = {
+            {"GENERIC_MOVEMENT_SPEED", "MOVEMENT_SPEED"},
+            {"GENERIC_WATER_MOVEMENT_EFFICIENCY", "WATER_MOVEMENT_EFFICIENCY"},
+            {"GENERIC_MOVEMENT_EFFICIENCY", "MOVEMENT_EFFICIENCY"},
+            {"GENERIC_FLYING_SPEED", "FLYING_SPEED"},
+            {"GENERIC_JUMP_STRENGTH", "JUMP_STRENGTH"},
+            {"GENERIC_GRAVITY", "GRAVITY"},
+            {"GENERIC_STEP_HEIGHT", "STEP_HEIGHT"},
+            {"GENERIC_KNOCKBACK_RESISTANCE", "KNOCKBACK_RESISTANCE"},
+            {"PLAYER_SNEAKING_SPEED", "SNEAKING_SPEED"},
+            {"PLAYER_ENTITY_INTERACTION_RANGE", "ENTITY_INTERACTION_RANGE"},
+            {"PLAYER_BLOCK_INTERACTION_RANGE", "BLOCK_INTERACTION_RANGE"},
+            {"PLAYER_BLOCK_BREAK_SPEED", "BLOCK_BREAK_SPEED"},
+            {"PLAYER_SWEEPING_DAMAGE_RATIO", "SWEEPING_DAMAGE_RATIO"}
+    };
 
     @SecureAsync
     public static boolean isCheckAllowed(CheckSetting checkSetting, Player player, LACPlayer lacPlayer, boolean async) {
@@ -146,17 +163,80 @@ public class CheckUtil extends PassableUtil {
                 itemStacks.add(itemStack);
         double result = 0;
         for (ItemStack itemStack : itemStacks) {
-            Map<String, Double> attributes = VerUtil.getAttributes(itemStack);
-            for (String name : names)
-                if (attributes.containsKey(name))
-                    result = Math.max(result, attributes.get(name));
+            Map<String, Double> attributes = withCompatibleAttributeNames(VerUtil.getAttributes(itemStack));
+            for (Map.Entry<String, Double> entry : attributes.entrySet()) {
+                for (String name : names) {
+                    if (isAttributeNameMatch(entry.getKey(), name))
+                        result = Math.max(result, entry.getValue());
+                }
+            }
         }
         return result;
     }
 
     @SecureAsync
     public static Map<String, Double> getPlayerAttributes(Player player) {
-        return VerUtil.getAttributes(player);
+        return withCompatibleAttributeNames(VerUtil.getAttributes(player));
+    }
+
+    @SecureAsync
+    public static double getAttributeValue(Map<String, Double> attributes, double defaultValue, String... names) {
+        if (attributes == null || attributes.isEmpty())
+            return defaultValue;
+        double result = defaultValue;
+        boolean found = false;
+        for (Map.Entry<String, Double> entry : attributes.entrySet()) {
+            for (String name : names) {
+                if (!isAttributeNameMatch(entry.getKey(), name))
+                    continue;
+                result = found ? Math.max(result, entry.getValue()) : entry.getValue();
+                found = true;
+            }
+        }
+        return result;
+    }
+
+    private static boolean isAttributeNameMatch(String actualName, String expectedName) {
+        String actual = normalizeAttributeName(actualName);
+        String expected = normalizeAttributeName(expectedName);
+        if (actual.equals(expected))
+            return true;
+        if (actual.endsWith("_" + expected) || expected.endsWith("_" + actual))
+            return true;
+        if (actual.startsWith("GENERIC_") && actual.substring("GENERIC_".length()).equals(expected))
+            return true;
+        if (expected.startsWith("GENERIC_") && expected.substring("GENERIC_".length()).equals(actual))
+            return true;
+        if (actual.startsWith("PLAYER_") && actual.substring("PLAYER_".length()).equals(expected))
+            return true;
+        return expected.startsWith("PLAYER_") && expected.substring("PLAYER_".length()).equals(actual);
+    }
+
+    private static Map<String, Double> withCompatibleAttributeNames(Map<String, Double> attributes) {
+        Map<String, Double> result = new HashMap<>();
+        if (attributes == null || attributes.isEmpty())
+            return result;
+        for (Map.Entry<String, Double> entry : attributes.entrySet()) {
+            String normalized = normalizeAttributeName(entry.getKey());
+            result.put(entry.getKey(), entry.getValue());
+            result.putIfAbsent(normalized, entry.getValue());
+            for (String[] aliases : ATTRIBUTE_ALIASES) {
+                if (!isAttributeNameMatch(normalized, aliases[0]) && !isAttributeNameMatch(normalized, aliases[1]))
+                    continue;
+                result.putIfAbsent(aliases[0], entry.getValue());
+                result.putIfAbsent(aliases[1], entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    private static String normalizeAttributeName(String name) {
+        if (name == null)
+            return "";
+        return name.toUpperCase(Locale.ROOT)
+                .replace("MINECRAFT:", "")
+                .replace('.', '_')
+                .replace('-', '_');
     }
 
     @SecureAsync

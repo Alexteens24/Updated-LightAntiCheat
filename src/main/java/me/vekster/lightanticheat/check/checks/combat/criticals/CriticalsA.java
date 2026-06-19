@@ -64,6 +64,9 @@ public class CriticalsA extends CombatCheck implements Listener {
                 getEffectAmplifier(cache, VerUtil.potions.get("LEVITATION")) != 0)
             return;
 
+        if (isNearStairs(player))
+            return;
+
         for (Block block : getWithinBlocks(player)) {
             if (!isActuallyPassable(block))
                 return;
@@ -135,6 +138,9 @@ public class CriticalsA extends CombatCheck implements Listener {
                 time - cache.lastKbVelocity <= 500)
             return;
 
+        if (isNearStairs(player))
+            return;
+
         for (Block block : getWithinBlocks(player)) {
             if (!isActuallyPassable(block) || !isActuallyPassable(block.getRelative(BlockFace.UP)))
                 return;
@@ -178,6 +184,22 @@ public class CriticalsA extends CombatCheck implements Listener {
         Scheduler.runTask(true, () -> {
             callViolationEventIfRepeat(player, lacPlayer, null, buffer, Main.getBufferDurationMils() - 1000);
         });
+    }
+
+    private boolean isNearStairs(Player player) {
+        for (Block block : getWithinBlocks(player)) {
+            if (isStairs(block) || isStairs(block.getRelative(BlockFace.DOWN)) || isStairs(block.getRelative(BlockFace.UP)))
+                return true;
+        }
+        for (Block block : getDownBlocks(player, 0.1)) {
+            if (isStairs(block) || isStairs(block.getRelative(BlockFace.DOWN)) || isStairs(block.getRelative(BlockFace.UP)))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isStairs(Block block) {
+        return block != null && block.getType().name().endsWith("_STAIRS");
     }
 
 }
