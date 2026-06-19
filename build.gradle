@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'me.vekster'
-version = 'HotFix-1.2.9'
+version = '1.2.9.5'
 
 repositories {
     mavenCentral()
@@ -20,7 +20,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
     compileOnly files('comp/spigot-1.8.8-R0.1-SNAPSHOT-latest.jar')
-    compileOnly 'io.netty:netty-all:4.2.3.Final'
+    compileOnly 'io.netty:netty-all:4.2.7.Final'
     implementation 'com.tcoded:FoliaLib:0.5.2'
     compileOnly 'org.geysermc.floodgate:api:2.2.3-SNAPSHOT'
     implementation 'com.tchristofferson:ConfigUpdater:2.2'

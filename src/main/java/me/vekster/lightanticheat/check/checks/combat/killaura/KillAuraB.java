@@ -15,10 +15,12 @@ import me.vekster.lightanticheat.util.precise.AccuracyUtil;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
 import me.vekster.lightanticheat.version.VerUtil;
 import org.bukkit.Location;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 /**
@@ -37,6 +39,9 @@ public class KillAuraB extends CombatCheck implements Listener {
         double yawChange = getYawChange(eyeLocation, lacPlayer);
 
         if (!isCheckAllowed(player, lacPlayer))
+            return;
+
+        if (hasThornsArmor(player))
             return;
 
         if (lacPlayer.isGliding() || lacPlayer.isRiptiding())
@@ -170,6 +175,21 @@ public class KillAuraB extends CombatCheck implements Listener {
                 Math.max(first, second),
                 Math.max(third, fourth)
         );
+    }
+
+    private boolean hasThornsArmor(Player player) {
+        Enchantment thorns = VerUtil.enchantment.get("THORNS");
+        for (ItemStack itemStack : player.getInventory().getArmorContents()) {
+            if (itemStack == null)
+                continue;
+            if (thorns != null && itemStack.getEnchantmentLevel(thorns) > 0)
+                return true;
+            for (Enchantment enchantment : itemStack.getEnchantments().keySet()) {
+                if (enchantment != null && "THORNS".equalsIgnoreCase(enchantment.getName()))
+                    return true;
+            }
+        }
+        return false;
     }
 
 }

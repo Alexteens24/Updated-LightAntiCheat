@@ -139,9 +139,14 @@ public class SpeedC extends MovementCheck implements Listener {
             targetSpeed *= 0.85;
 
         Map<String, Double> attributes = getPlayerAttributes(player);
-        if (getItemStackAttributes(player, "GENERIC_MOVEMENT_SPEED", "PLAYER_SNEAKING_SPEED") != 0 ||
-                attributes.getOrDefault("GENERIC_MOVEMENT_SPEED", 0.13) > 0.14 ||
-                attributes.getOrDefault("PLAYER_SNEAKING_SPEED", 0.0) > 0.1)
+        double movementSpeed = getAttributeValue(attributes, -1.0D,
+                "GENERIC_MOVEMENT_SPEED", "MOVEMENT_SPEED", "minecraft:movement_speed", "minecraft:generic.movement_speed");
+        double sneakingSpeed = getAttributeValue(attributes, 0.0D,
+                "PLAYER_SNEAKING_SPEED", "SNEAKING_SPEED", "minecraft:sneaking_speed", "minecraft:player.sneaking_speed");
+        if (getItemStackAttributes(player,
+                "GENERIC_MOVEMENT_SPEED", "MOVEMENT_SPEED",
+                "PLAYER_SNEAKING_SPEED", "SNEAKING_SPEED") != 0 ||
+                movementSpeed > 0.14D || sneakingSpeed > 0.1D)
             return;
 
         if (targetSpeed < finalSpeedLimit) {

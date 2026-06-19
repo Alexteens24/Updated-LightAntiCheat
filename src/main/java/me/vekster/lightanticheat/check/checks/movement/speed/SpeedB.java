@@ -166,9 +166,16 @@ public class SpeedB extends MovementCheck implements Listener {
         maxSpeed *= 1.3;
 
         Map<String, Double> attributes = getPlayerAttributes(player);
+        double movementSpeed = getAttributeValue(attributes, -1.0D,
+                "GENERIC_MOVEMENT_SPEED", "MOVEMENT_SPEED", "minecraft:movement_speed", "minecraft:generic.movement_speed");
+        double sneakingSpeed = getAttributeValue(attributes, 0.0D,
+                "PLAYER_SNEAKING_SPEED", "SNEAKING_SPEED", "minecraft:sneaking_speed", "minecraft:player.sneaking_speed");
+        double movementAttributeAmount = movementSpeed > 0.0D ? Math.max(0.0D, movementSpeed / 0.13D - 1.0D) : 0.0D;
         double attributeAmount = Math.max(
-                getItemStackAttributes(player, "GENERIC_MOVEMENT_SPEED", "PLAYER_SNEAKING_SPEED"),
-                Math.max(attributes.getOrDefault("GENERIC_MOVEMENT_SPEED", 0.13) - 0.13, attributes.getOrDefault("PLAYER_SNEAKING_SPEED", 0.0))
+                getItemStackAttributes(player,
+                        "GENERIC_MOVEMENT_SPEED", "MOVEMENT_SPEED",
+                        "PLAYER_SNEAKING_SPEED", "SNEAKING_SPEED"),
+                Math.max(movementAttributeAmount, sneakingSpeed)
         );
         if (attributeAmount != 0) {
             maxSpeed = (maxSpeed * 1.05 + 0.11) * (1 + Math.max(0, attributeAmount));
