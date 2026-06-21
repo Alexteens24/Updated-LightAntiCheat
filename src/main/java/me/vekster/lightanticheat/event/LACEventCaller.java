@@ -146,6 +146,9 @@ public class LACEventCaller extends LightInjector implements Listener {
 
     @Override
     protected @Nullable Object onPacketReceiveAsync(@Nullable Player sender, @NotNull Channel channel, @NotNull Object nmsPacket) {
+        if (isClosed()) return nmsPacket;
+        Main instance = Main.getInstance();
+        if (instance == null || !instance.isEnabled()) return nmsPacket;
         if (!ConfigManager.Config.enabled) return nmsPacket;
         if (sender == null) return nmsPacket;
         LACPlayer lacPlayer = LACPlayerListener.getAsyncPlayers().getOrDefault(sender.getUniqueId(), null);
