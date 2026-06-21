@@ -175,9 +175,9 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        FoliaUtil.shutdown();
         if (eventCaller != null)
             eventCaller.close();
-        FoliaUtil.shutdown();
     }
 
     public static Main getInstance() {
