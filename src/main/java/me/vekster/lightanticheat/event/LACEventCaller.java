@@ -85,8 +85,6 @@ public class LACEventCaller extends LightInjector implements Listener {
             return;
         LACPlayerMoveEvent lacPlayerMoveEvent = new LACPlayerMoveEvent(event, player, lacPlayer, event.getFrom(), event.getTo());
         Scheduler.entityThread(player, () -> {
-            if (!FoliaUtil.isStable(player))
-                return;
             PLUGIN_MANAGER.callEvent(lacPlayerMoveEvent);
             callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerMoveEvent(lacPlayerMoveEvent));
         });
@@ -104,8 +102,6 @@ public class LACEventCaller extends LightInjector implements Listener {
         if (!isPlayerReady(player, lacPlayer))
             return;
         Scheduler.entityThread(player, () -> {
-            if (!FoliaUtil.isStable(player))
-                return;
             PLUGIN_MANAGER.callEvent(new LACPlayerAttackEvent(event, player, lacPlayer, event.getEntity()));
             callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerAttackEvent(player, lacPlayer, event.getEntity().getEntityId()));
         });
@@ -121,8 +117,6 @@ public class LACEventCaller extends LightInjector implements Listener {
         LACPlayerPlaceBlockEvent lacPlayerPlaceBlockEvent = new LACPlayerPlaceBlockEvent(event, player, lacPlayer,
                 event.getBlock(), event.getBlockAgainst(), event.getBlockReplacedState());
         Scheduler.entityThread(player, () -> {
-            if (!FoliaUtil.isStable(player))
-                return;
             PLUGIN_MANAGER.callEvent(lacPlayerPlaceBlockEvent);
             callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerPlaceBlockEvent(lacPlayerPlaceBlockEvent));
         });
@@ -137,8 +131,6 @@ public class LACEventCaller extends LightInjector implements Listener {
             return;
         LACPlayerBreakBlockEvent lacPlayerBreakBlockEvent = new LACPlayerBreakBlockEvent(event, player, lacPlayer, event.getBlock());
         Scheduler.entityThread(player, () -> {
-            if (!FoliaUtil.isStable(player))
-                return;
             PLUGIN_MANAGER.callEvent(lacPlayerBreakBlockEvent);
             callAsyncEventFromEntityThread(player, lacPlayer, new LACAsyncPlayerBreakBlockEvent(lacPlayerBreakBlockEvent));
         });

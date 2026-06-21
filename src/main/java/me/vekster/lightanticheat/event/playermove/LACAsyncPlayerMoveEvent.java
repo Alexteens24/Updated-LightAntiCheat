@@ -42,14 +42,12 @@ public class LACAsyncPlayerMoveEvent extends Event implements Cancellable {
         this.isPlayerGliding = event.isPlayerGliding();
         this.isPlayerRiptiding = event.isPlayerRiptiding();
         this.fromBlockCache = lacPlayer.cache.fromBlockCache;
-        if (FoliaUtil.isStable(event.getPlayer())) {
+        isPlayerClimbing = lacPlayer.isClimbing();
+        isPlayerInWater = lacPlayer.isInWater();
+        if (!FoliaUtil.isFolia() || FoliaUtil.canAccessLocation(to)) {
             this.toBlockCache = new BlockCache(player, to);
-            isPlayerClimbing = lacPlayer.isClimbing();
-            isPlayerInWater = lacPlayer.isInWater();
         } else {
-            toBlockCache = fromBlockCache;
-            isPlayerClimbing = false;
-            isPlayerInWater = false;
+            this.toBlockCache = fromBlockCache;
         }
         lacPlayer.cache.fromBlockCache = this.toBlockCache;
     }
