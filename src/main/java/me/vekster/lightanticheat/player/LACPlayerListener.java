@@ -1,5 +1,6 @@
 package me.vekster.lightanticheat.player;
 
+import me.vekster.lightanticheat.event.packetrecive.FlyingPacketData;
 import me.vekster.lightanticheat.event.packetrecive.LACAsyncPacketReceiveEvent;
 import me.vekster.lightanticheat.event.packetrecive.packettype.PacketType;
 import me.vekster.lightanticheat.event.playerbreakblock.LACPlayerBreakBlockEvent;
@@ -16,6 +17,8 @@ import me.vekster.lightanticheat.util.async.AsyncUtil;
 import me.vekster.lightanticheat.util.config.ConfigManager;
 import me.vekster.lightanticheat.util.cooldown.CooldownUtil;
 import me.vekster.lightanticheat.util.detection.CheckUtil;
+import me.vekster.lightanticheat.util.detection.specific.GroundUtil;
+import me.vekster.lightanticheat.util.hook.server.folia.FoliaUtil;
 import me.vekster.lightanticheat.util.detection.LeanTowards;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
 import me.vekster.lightanticheat.version.VerPlayer;
@@ -145,7 +148,40 @@ public class LACPlayerListener implements Listener {
         LACPlayer lacPlayer = event.getLacPlayer();
         if (!isReadyForAsyncHistory(player, lacPlayer))
             return;
-        lacPlayer.cache.history.onPacket.location.add(event.getPlayer().getLocation());
+        FlyingPacketData flying = event.getFlyingData();
+        if (flying == null) {
+            recordPacketHistoryLegacy(player, lacPlayer);
+            return;
+        }
+        PlayerCache cache = lacPlayer.cache;
+        boolean towardsTrue = flying.onGround;
+        boolean towardsFalse = flying.onGround;
+
+        if (flying.hasPosition) {
+            Location location = new Location(player.getWorld(), flying.x, flying.y, flying.z);
+            if (flying.hasRotation) {
+                location.setYaw(flying.yaw);
+                location.setPitch(flying.pitch);
+            }
+            if (!FoliaUtil.isFolia() || FoliaUtil.canAccessLocation(location)) {
+                Set<Block> downBlocks = CheckUtil.getDownBlocks(player, location, 0.15);
+                towardsFalse = GroundUtil.isOnGroundAt(flying.y, downBlocks);
+                cache.lastClaimedPacketLocation = location.clone();
+                cache.history.onPacket.location.add(location.clone());
+            }
+        } else if (cache.lastClaimedPacketLocation != null) {
+            Location lastClaimed = cache.lastClaimedPacketLocation;
+            if (!FoliaUtil.isFolia() || FoliaUtil.canAccessLocation(lastClaimed)) {
+                Set<Block> downBlocks = CheckUtil.getDownBlocks(player, lastClaimed, 0.15);
+                towardsFalse = GroundUtil.isOnGroundAt(lastClaimed.getY(), downBlocks);
+            }
+        }
+
+        cache.history.onPacket.onGround.add(new PlayerCache.OnGround(towardsFalse, towardsTrue));
+    }
+
+    private static void recordPacketHistoryLegacy(Player player, LACPlayer lacPlayer) {
+        lacPlayer.cache.history.onPacket.location.add(player.getLocation());
         Set<Block> downBlocks = CheckUtil.getDownBlocks(player, 0.15);
         lacPlayer.cache.history.onPacket.onGround
                 .add(new PlayerCache.OnGround(CheckUtil.isOnGround(player, downBlocks, lacPlayer.cache, LeanTowards.FALSE),

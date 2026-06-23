@@ -115,7 +115,15 @@ public class GroundUtil extends BlockUtil {
         return false;
     }
 
+    public static boolean isOnGroundAt(double y, Set<Block> downBlocks) {
+        return isOnBlockAt(y, downBlocks);
+    }
+
     private static boolean isOnBlock(Entity entity, Set<Block> downBlocks) {
+        return isOnBlockAt(entity.getLocation().getY(), downBlocks);
+    }
+
+    private static boolean isOnBlockAt(double y, Set<Block> downBlocks) {
         boolean notPassable = false;
         boolean occluding = true;
         for (Block block : downBlocks) {
@@ -133,9 +141,9 @@ public class GroundUtil extends BlockUtil {
         }
         if (notPassable) {
             if (occluding) {
-                return getBlockY(entity.getLocation().getY()) == 0;
+                return getBlockY(y) == 0;
             } else {
-                return BLOCK_HEIGHTS.contains((float) getBlockY(entity.getLocation().getY()));
+                return BLOCK_HEIGHTS.contains((float) getBlockY(y));
             }
         }
         return false;

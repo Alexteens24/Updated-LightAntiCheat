@@ -137,7 +137,7 @@ public class JumpB extends MovementCheck implements Listener {
         }
 
         PlayerCacheHistory<Location> eventHistory = history.onEvent.location;
-        PlayerCacheHistory<Location> packetHistory = history.onEvent.location;
+        PlayerCacheHistory<Location> packetHistory = history.onPacket.location;
         double previousEventSpeed = distanceVertical(eventHistory.get(HistoryElement.FIRST), eventHistory.get(HistoryElement.FROM));
         double eventSpeed = distanceVertical(eventHistory.get(HistoryElement.FROM), event.getTo());
         double previousPacketSpeed = distanceVertical(packetHistory.get(HistoryElement.SECOND), packetHistory.get(HistoryElement.FIRST));
