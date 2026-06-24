@@ -17,6 +17,7 @@ public class PlayerCache {
     public PlayerCache(Player player) {
         history = new History(player);
         fromBlockCache = new BlockCache(player, player.getLocation());
+        lastClaimedPacketLocation = player.getLocation().clone();
     }
 
     public long lastWasDamaged;
@@ -90,6 +91,8 @@ public class PlayerCache {
     public History history;
 
     public BlockCache fromBlockCache;
+
+    public volatile Location lastClaimedPacketLocation;
 
     public boolean alerts = true;
 

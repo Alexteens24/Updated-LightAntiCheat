@@ -49,6 +49,7 @@ import me.vekster.lightanticheat.check.checks.player.autobot.AutoBotA;
 import me.vekster.lightanticheat.check.checks.player.skinblinker.SkinBlinkerA;
 import me.vekster.lightanticheat.command.LACCommand;
 import me.vekster.lightanticheat.event.LACEventCaller;
+import me.vekster.lightanticheat.event.packetrecive.FlyingPacketReader;
 import me.vekster.lightanticheat.listener.invalidping.InvalidPingListener;
 import me.vekster.lightanticheat.listener.unloadedchunk.UnloadedChunkListener;
 import me.vekster.lightanticheat.player.LACPlayerListener;
@@ -78,6 +79,7 @@ public class Main extends JavaPlugin {
     public void onEnable() {
         instance = this;
         FoliaUtil.loadFoliaUtil();
+        FlyingPacketReader.load();
         ConfigManager.loadConfig();
 
         Buffer.loadBufferCleaner(BUFFER_DURATION_MILS);

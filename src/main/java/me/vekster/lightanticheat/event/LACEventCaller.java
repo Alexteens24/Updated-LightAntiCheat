@@ -4,6 +4,8 @@ import com.fren_gor.lightInjector.LightInjector;
 import io.netty.channel.Channel;
 import me.vekster.lightanticheat.Main;
 import me.vekster.lightanticheat.event.packetrecive.LACAsyncPacketReceiveEvent;
+import me.vekster.lightanticheat.event.packetrecive.FlyingPacketData;
+import me.vekster.lightanticheat.event.packetrecive.FlyingPacketReader;
 import me.vekster.lightanticheat.event.packetrecive.packettype.PacketType;
 import me.vekster.lightanticheat.event.playerattack.LACAsyncPlayerAttackEvent;
 import me.vekster.lightanticheat.event.playerattack.LACPlayerAttackEvent;
@@ -14,7 +16,6 @@ import me.vekster.lightanticheat.event.playermove.LACPlayerMoveEvent;
 import me.vekster.lightanticheat.event.playerplaceblock.LACAsyncPlayerPlaceBlockEvent;
 import me.vekster.lightanticheat.event.playerplaceblock.LACPlayerPlaceBlockEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
-import me.vekster.lightanticheat.player.LACPlayerListener;
 import me.vekster.lightanticheat.util.config.ConfigManager;
 import me.vekster.lightanticheat.util.detection.CheckUtil;
 import me.vekster.lightanticheat.util.hook.server.folia.FoliaUtil;
@@ -143,10 +144,11 @@ public class LACEventCaller extends LightInjector implements Listener {
         if (instance == null || !instance.isEnabled()) return nmsPacket;
         if (!ConfigManager.Config.enabled) return nmsPacket;
         if (sender == null) return nmsPacket;
-        LACPlayer lacPlayer = LACPlayerListener.getAsyncPlayers().getOrDefault(sender.getUniqueId(), null);
+        LACPlayer lacPlayer = LACPlayer.getLacPlayer(sender);
         if (!isPlayerReady(sender, lacPlayer))
             return nmsPacket;
-        LACAsyncPacketReceiveEvent event = new LACAsyncPacketReceiveEvent(sender, lacPlayer, nmsPacket);
+        FlyingPacketData flyingData = FlyingPacketReader.read(nmsPacket);
+        LACAsyncPacketReceiveEvent event = new LACAsyncPacketReceiveEvent(sender, lacPlayer, nmsPacket, flyingData);
         if (event.getPacketType() == PacketType.USE_ENTITY && VerIdentifier.getVersion().isNewerThan(LACVersion.V1_8)) {
             callAsyncEvent(event.getPlayer(), event.getLacPlayer(),
                     new LACAsyncPlayerAttackEvent(event.getPlayer(), event.getLacPlayer(), event.getEntityId()));
