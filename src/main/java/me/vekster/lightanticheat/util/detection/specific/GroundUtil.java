@@ -125,6 +125,18 @@ public class GroundUtil extends BlockUtil {
         return isOnBlockAt(y, downBlocks);
     }
 
+    private static final double EVENT_STEP_TOLERANCE = 0.3D;
+
+    public static boolean isOnGroundAtEvent(double fromY, double toY,
+                                            Set<Block> fromDownBlocks, Set<Block> toDownBlocks,
+                                            PlayerCache cache, LeanTowards leanTowards) {
+        if (isOnGroundAt(fromY, fromDownBlocks, cache, leanTowards))
+            return true;
+        if (leanTowards == LeanTowards.FALSE && Math.abs(fromY - toY) < EVENT_STEP_TOLERANCE)
+            return isOnGroundAt(toY, toDownBlocks, cache, leanTowards);
+        return false;
+    }
+
     private static boolean isOnEntityAt(double y, PlayerCache cache) {
         Set<CachedEntity> nearbyEntities = cache.entitiesVeryNearby;
         if (nearbyEntities.isEmpty())

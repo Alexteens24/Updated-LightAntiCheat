@@ -186,7 +186,7 @@ public class LACPlayerListener implements Listener {
             return;
         FlyingPacketData flying = event.getFlyingData();
         if (flying == null) {
-            PlayerHistoryRecorder.recordPacketHistoryLegacy(player, lacPlayer);
+            PlayerHistoryRecorder.recordPacketHistoryLegacy(player, lacPlayer, event.getNmsPacket());
             return;
         }
         PlayerHistoryRecorder.recordPacketHistory(player, lacPlayer, flying);

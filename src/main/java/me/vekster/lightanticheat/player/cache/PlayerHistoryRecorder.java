@@ -1,6 +1,7 @@
 package me.vekster.lightanticheat.player.cache;
 
 import me.vekster.lightanticheat.event.packetrecive.FlyingPacketData;
+import me.vekster.lightanticheat.event.packetrecive.FlyingPacketReader;
 import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.player.LACPlayer;
 import me.vekster.lightanticheat.player.cache.history.HistoryElement;
@@ -14,6 +15,15 @@ import org.bukkit.entity.Player;
 
 import java.util.Set;
 
+/**
+ * Records paired {@code location} + {@code onGround} history rings.
+ * <p>
+ * onPacket: towardsFalse = server collision at packet Y (strict);
+ * towardsTrue = client {@code flying.onGround}.
+ * <p>
+ * onEvent: towardsFalse = server at move-from (strict + slab step tolerance);
+ * towardsTrue = server lenient (+ nearby entities) at move-from.
+ */
 public final class PlayerHistoryRecorder {
 
     private static final double PACKET_GROUND_PADDING = 0.15D;
@@ -26,10 +36,14 @@ public final class PlayerHistoryRecorder {
         Location from = event.getFrom();
         PlayerCache.OnGround onGround;
         if (!FoliaUtil.isFolia() || FoliaUtil.canAccessLocation(from)) {
-            Set<Block> downBlocks = event.getFromDownBlocks();
+            Set<Block> fromDownBlocks = event.getFromDownBlocks();
+            Set<Block> toDownBlocks = event.getToDownBlocks();
             double fromY = from.getY();
-            boolean towardsFalse = GroundUtil.isOnGroundAt(fromY, downBlocks, cache, LeanTowards.FALSE);
-            boolean towardsTrue = GroundUtil.isOnGroundAt(fromY, downBlocks, cache, LeanTowards.TRUE);
+            double toY = event.getTo().getY();
+            boolean towardsFalse = GroundUtil.isOnGroundAtEvent(fromY, toY, fromDownBlocks, toDownBlocks,
+                    cache, LeanTowards.FALSE);
+            boolean towardsTrue = GroundUtil.isOnGroundAtEvent(fromY, toY, fromDownBlocks, toDownBlocks,
+                    cache, LeanTowards.TRUE);
             onGround = new PlayerCache.OnGround(towardsFalse, towardsTrue);
         } else {
             onGround = carryForwardEventOnGround(cache);
@@ -74,22 +88,25 @@ public final class PlayerHistoryRecorder {
         pushPacketOnGround(cache, towardsFalse, towardsTrue);
     }
 
-    public static void recordPacketHistoryLegacy(Player player, LACPlayer lacPlayer) {
+    public static void recordPacketHistoryLegacy(Player player, LACPlayer lacPlayer, Object nmsPacket) {
         PlayerCache cache = lacPlayer.cache;
+        Boolean clientOnGround = FlyingPacketReader.readOnGround(nmsPacket);
+        boolean towardsTrue = clientOnGround != null
+                ? clientOnGround
+                : carryForwardPacketTowardsTrue(cache);
+
         Location location = cache.lastClaimedPacketLocation != null
                 ? cache.lastClaimedPacketLocation.clone()
                 : player.getLocation().clone();
         if (!FoliaUtil.isFolia() || FoliaUtil.canAccessLocation(location)) {
             Set<Block> downBlocks = CheckUtil.getDownBlocks(player, location, PACKET_GROUND_PADDING);
             boolean towardsFalse = GroundUtil.isOnGroundAt(location.getY(), downBlocks, cache, LeanTowards.FALSE);
-            boolean towardsTrue = GroundUtil.isOnGroundAt(location.getY(), downBlocks, cache, LeanTowards.TRUE);
             if (cache.lastClaimedPacketLocation == null)
                 cache.lastClaimedPacketLocation = location.clone();
             pushPacketLocationAndOnGround(cache, location, towardsFalse, towardsTrue);
             return;
         }
         boolean towardsFalse = carryForwardPacketTowardsFalse(cache);
-        boolean towardsTrue = carryForwardPacketTowardsTrue(cache);
         pushPacketOnGround(cache, towardsFalse, towardsTrue);
     }
 
@@ -105,6 +122,8 @@ public final class PlayerHistoryRecorder {
     }
 
     private static void pushPacketOnGround(PlayerCache cache, boolean towardsFalse, boolean towardsTrue) {
+        if (cache.lastClaimedPacketLocation != null)
+            cache.history.onPacket.location.add(cache.lastClaimedPacketLocation.clone());
         cache.history.onPacket.onGround.add(new PlayerCache.OnGround(towardsFalse, towardsTrue));
     }
 

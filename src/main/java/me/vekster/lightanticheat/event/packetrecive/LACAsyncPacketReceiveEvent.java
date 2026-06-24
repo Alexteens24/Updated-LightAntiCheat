@@ -16,6 +16,7 @@ public class LACAsyncPacketReceiveEvent extends Event {
     private final String packetName;
     private final PacketType packetType;
     private final int entityId;
+    private final Object nmsPacket;
     private final FlyingPacketData flyingData;
 
     public LACAsyncPacketReceiveEvent(Player player, LACPlayer lacPlayer, Object nmsPacket,
@@ -24,6 +25,7 @@ public class LACAsyncPacketReceiveEvent extends Event {
 
         this.player = player;
         this.lacPlayer = lacPlayer;
+        this.nmsPacket = nmsPacket;
         this.packetName = nmsPacket.getClass().getSimpleName().split("\\$")[0];
         this.packetType = PacketTypeRecognizer.getPacketType(nmsPacket);
         this.entityId = PacketTypeRecognizer.getEntityId(nmsPacket);
@@ -53,6 +55,10 @@ public class LACAsyncPacketReceiveEvent extends Event {
     @Nullable
     public FlyingPacketData getFlyingData() {
         return flyingData;
+    }
+
+    public Object getNmsPacket() {
+        return nmsPacket;
     }
 
     public HandlerList getHandlers() {

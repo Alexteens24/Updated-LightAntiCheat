@@ -51,7 +51,7 @@ public class FoliaUtil {
         if (!isFolia() || location == null)
             return true;
         if (isOwnedByCurrentRegionLocation == null)
-            return true;
+            return false;
         try {
             return (boolean) isOwnedByCurrentRegionLocation.invoke(null, location);
         } catch (ReflectiveOperationException e) {
