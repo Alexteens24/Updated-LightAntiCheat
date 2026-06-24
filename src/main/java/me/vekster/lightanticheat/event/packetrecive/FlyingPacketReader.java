@@ -4,6 +4,7 @@ import me.vekster.lightanticheat.event.packetrecive.packettype.PacketType;
 import me.vekster.lightanticheat.event.packetrecive.packettype.PacketTypeRecognizer;
 import me.vekster.lightanticheat.version.identifier.LACVersion;
 import me.vekster.lightanticheat.version.identifier.VerIdentifier;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -38,6 +39,14 @@ public class FlyingPacketReader {
             x = invokeDouble(nmsPacket, "getX", "x");
             y = invokeDouble(nmsPacket, "getY", "y");
             z = invokeDouble(nmsPacket, "getZ", "z");
+            if (x == null || y == null || z == null) {
+                Double[] position = readPositionComponent(nmsPacket, "position", "pos");
+                if (position != null) {
+                    x = position[0];
+                    y = position[1];
+                    z = position[2];
+                }
+            }
             if (x == null || y == null || z == null) {
                 logParseFailureOnce();
                 return null;
@@ -120,6 +129,25 @@ public class FlyingPacketReader {
     }
 
     @Nullable
+    private static Double[] readPositionComponent(Object target, String... methodNames) {
+        for (String methodName : methodNames) {
+            try {
+                Method method = target.getClass().getMethod(methodName);
+                Object value = method.invoke(target);
+                if (value == null)
+                    continue;
+                Double x = invokeDouble(value, "getX", "x");
+                Double y = invokeDouble(value, "getY", "y");
+                Double z = invokeDouble(value, "getZ", "z");
+                if (x != null && y != null && z != null)
+                    return new Double[]{x, y, z};
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     private static Double invokeDouble(Object target, String... methodNames) {
         for (String methodName : methodNames) {
             try {
@@ -169,6 +197,7 @@ public class FlyingPacketReader {
         if (loggedParseFailure)
             return;
         loggedParseFailure = true;
+        Bukkit.getLogger().warning("[FlyingPacketReader] Failed to parse flying packet position or rotation fields.");
     }
 
 }

@@ -119,6 +119,25 @@ public class GroundUtil extends BlockUtil {
         return isOnBlockAt(y, downBlocks);
     }
 
+    public static boolean isOnGroundAt(double y, Set<Block> downBlocks, PlayerCache cache, LeanTowards leanTowards) {
+        if (leanTowards == LeanTowards.TRUE && isOnEntityAt(y, cache))
+            return true;
+        return isOnBlockAt(y, downBlocks);
+    }
+
+    private static boolean isOnEntityAt(double y, PlayerCache cache) {
+        Set<CachedEntity> nearbyEntities = cache.entitiesVeryNearby;
+        if (nearbyEntities.isEmpty())
+            return false;
+        for (CachedEntity nearbyEntity : nearbyEntities) {
+            if (nearbyEntity.entityType == EntityType.PLAYER || nearbyEntity.width < 0.55 || nearbyEntity.height < 0.5)
+                continue;
+            if (BLOCK_HEIGHTS.contains((float) (getBlockY(y - nearbyEntity.width))))
+                return true;
+        }
+        return false;
+    }
+
     private static boolean isOnBlock(Entity entity, Set<Block> downBlocks) {
         return isOnBlockAt(entity.getLocation().getY(), downBlocks);
     }
