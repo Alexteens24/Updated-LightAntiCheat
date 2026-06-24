@@ -9,6 +9,7 @@ import me.vekster.lightanticheat.player.cache.PlayerCache;
 import me.vekster.lightanticheat.player.cache.history.HistoryElement;
 import me.vekster.lightanticheat.util.hook.plugin.FloodgateHook;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
+import me.vekster.lightanticheat.version.VerPlayer;
 import me.vekster.lightanticheat.version.VerUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -74,6 +75,16 @@ public class SpeedD extends MovementCheck implements Listener {
         }
 
         long currentTime = System.currentTimeMillis();
+        if (isRiptideExempt(player, lacPlayer, cache, currentTime)) {
+            buffer.put("riptideTime", currentTime);
+            buffer.put("liquidTicks", 0);
+            return;
+        }
+        if (currentTime - buffer.getLong("riptideTime") < 4000) {
+            buffer.put("liquidTicks", 0);
+            return;
+        }
+
         if (currentTime - buffer.getLong("effectTime") < 4000) {
             buffer.put("liquidTicks", 0);
             return;
@@ -207,6 +218,14 @@ public class SpeedD extends MovementCheck implements Listener {
         if (!isCheckAllowed(player, lacPlayer, true))
             return;
 
+        long currentTime = System.currentTimeMillis();
+        if (isRiptideExempt(player, lacPlayer, lacPlayer.cache, currentTime)) {
+            Buffer buffer = getBuffer(player, true);
+            buffer.put("riptideTime", currentTime);
+            buffer.put("liquidTicks", 0);
+            return;
+        }
+
         if (getEffectAmplifier(lacPlayer.cache, VerUtil.potions.get("LEVITATION")) > 2 ||
                 getEffectAmplifier(lacPlayer.cache, PotionEffectType.SPEED) > 5) {
             Buffer buffer = getBuffer(player, true);
@@ -222,6 +241,26 @@ public class SpeedD extends MovementCheck implements Listener {
             if (dolphinsGraceEffectAmplifier > 2)
                 buffer.put("effectTime", System.currentTimeMillis());
         }
+    }
+
+    private boolean isRiptideExempt(Player player, LACPlayer lacPlayer, PlayerCache cache, long currentTime) {
+        if (lacPlayer.isRiptiding() || VerPlayer.isRiptiding(player) || currentTime - cache.lastRiptiding < 4000)
+            return true;
+        return hasRiptideTrident(player) && currentTime - cache.lastInWater < 1000;
+    }
+
+    private boolean hasRiptideTrident(Player player) {
+        Material trident = VerUtil.material.get("TRIDENT");
+        Enchantment riptide = VerUtil.enchantment.get("RIPTIDE");
+        if (trident == null || riptide == null)
+            return false;
+        return hasRiptide(VerPlayer.getItemInMainHand(player), trident, riptide) ||
+                hasRiptide(VerPlayer.getItemInOffHand(player), trident, riptide);
+    }
+
+    private boolean hasRiptide(ItemStack itemStack, Material trident, Enchantment riptide) {
+        return itemStack != null && itemStack.getType() == trident &&
+                itemStack.getEnchantmentLevel(riptide) > 0;
     }
 
 }

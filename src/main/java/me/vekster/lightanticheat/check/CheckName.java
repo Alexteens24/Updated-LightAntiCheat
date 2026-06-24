@@ -20,7 +20,6 @@ public enum CheckName {
     FASTCLIMB_A(CheckType.MOVEMENT, "FastClimb_A", "ClimbingSpeed"),
     NOSLOW_A(CheckType.MOVEMENT, "NoSlow_A", "Cobweb"),
     STEP_A(CheckType.MOVEMENT, "Step_A", "Step"),
-    STEP_B(CheckType.MOVEMENT, "Step_B", "Step"),
     VEHICLE_A(CheckType.MOVEMENT, "Vehicle_A", "Vehicle"),
     ELYTRA_A(CheckType.MOVEMENT, "Elytra_A", "Speed"),
     ELYTRA_B(CheckType.MOVEMENT, "Elytra_B", "Acceleration"),

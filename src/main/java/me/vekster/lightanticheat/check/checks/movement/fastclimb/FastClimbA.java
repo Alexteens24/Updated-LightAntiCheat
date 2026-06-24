@@ -17,6 +17,8 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Set;
+
 public class FastClimbA extends MovementCheck implements Listener {
     private static final double MAX_CLIMB_DELTA = 0.118D;
     private static final double HARD_CLIMB_DELTA = 1.0D;
@@ -29,7 +31,7 @@ public class FastClimbA extends MovementCheck implements Listener {
     @Override
     public boolean isConditionAllowed(Player player, LACPlayer lacPlayer, PlayerCache cache, boolean isClimbing, boolean isInWater,
                                       boolean isFlying, boolean isInsideVehicle, boolean isGliding, boolean isRiptiding) {
-        if (isFlying || isInsideVehicle || !isClimbing || isGliding || isRiptiding || isInWater)
+        if (isFlying || isInsideVehicle || isGliding || isRiptiding || isInWater)
             return false;
         if (cache.flyingTicks >= -5 || cache.glidingTicks >= -3 || cache.riptidingTicks >= -3)
             return false;
@@ -53,6 +55,11 @@ public class FastClimbA extends MovementCheck implements Listener {
         Buffer buffer = getBuffer(player, true);
 
         if (!isCheckAllowed(player, lacPlayer, true) || !isConditionAllowed(player, lacPlayer, event)) {
+            reset(buffer);
+            return;
+        }
+
+        if (!isOnClimbable(event)) {
             reset(buffer);
             return;
         }
@@ -107,6 +114,25 @@ public class FastClimbA extends MovementCheck implements Listener {
         Material scaffolding = VerUtil.material.get("SCAFFOLDING");
         return scaffolding != null &&
                 (event.getFromWithinMaterials().contains(scaffolding) || event.getToWithinMaterials().contains(scaffolding));
+    }
+
+    private boolean isOnClimbable(LACAsyncPlayerMoveEvent event) {
+        return hasClimbable(event.getFromWithinMaterials()) || hasClimbable(event.getToWithinMaterials());
+    }
+
+    private boolean hasClimbable(Set<Material> materials) {
+        for (Material material : materials)
+            if (isClimbable(material))
+                return true;
+        return false;
+    }
+
+    private boolean isClimbable(Material material) {
+        if (material == null)
+            return false;
+        String name = material.name();
+        return name.equals("LADDER") || name.equals("VINE") || name.contains("_VINES") ||
+                name.equals("WEEPING_VINES") || name.equals("TWISTING_VINES");
     }
 
     private void decay(Buffer buffer) {

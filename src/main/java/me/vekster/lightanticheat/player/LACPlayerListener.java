@@ -348,6 +348,8 @@ public class LACPlayerListener implements Listener {
     public void lastBlockPlace(LACPlayerPlaceBlockEvent event) {
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (lacPlayer == null)
+            return;
         lacPlayer.cache.lastBlockPlace = System.currentTimeMillis();
     }
 
@@ -355,6 +357,8 @@ public class LACPlayerListener implements Listener {
     public void lastBlockBreak(LACPlayerBreakBlockEvent event) {
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (lacPlayer == null)
+            return;
         lacPlayer.cache.lastBlockBreak = System.currentTimeMillis();
     }
 
@@ -363,6 +367,8 @@ public class LACPlayerListener implements Listener {
         if (CheckUtil.isExternalNPC(event)) return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (lacPlayer == null)
+            return;
         lacPlayer.cache.lastTeleport = System.currentTimeMillis();
     }
 
@@ -371,6 +377,8 @@ public class LACPlayerListener implements Listener {
         if (CheckUtil.isExternalNPC(event)) return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (lacPlayer == null)
+            return;
         lacPlayer.cache.lastWorldChange = System.currentTimeMillis();
     }
 
@@ -379,6 +387,8 @@ public class LACPlayerListener implements Listener {
         if (CheckUtil.isExternalNPC(event)) return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (lacPlayer == null)
+            return;
         lacPlayer.cache.lastGamemodeChange = System.currentTimeMillis();
     }
 
@@ -387,6 +397,8 @@ public class LACPlayerListener implements Listener {
         if (CheckUtil.isExternalNPC(event)) return;
         Player player = event.getPlayer();
         LACPlayer lacPlayer = LACPlayer.getLacPlayer(player);
+        if (lacPlayer == null)
+            return;
         lacPlayer.cache.lastRespawn = System.currentTimeMillis();
     }
 
