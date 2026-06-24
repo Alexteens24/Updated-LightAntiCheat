@@ -1,5 +1,6 @@
 package me.vekster.lightanticheat.player;
 
+import me.vekster.lightanticheat.event.packetrecive.FlyingPacketData;
 import me.vekster.lightanticheat.event.packetrecive.LACAsyncPacketReceiveEvent;
 import me.vekster.lightanticheat.event.packetrecive.packettype.PacketType;
 import me.vekster.lightanticheat.event.playerbreakblock.LACPlayerBreakBlockEvent;
@@ -7,6 +8,7 @@ import me.vekster.lightanticheat.event.playermove.LACAsyncPlayerMoveEvent;
 import me.vekster.lightanticheat.event.playermove.LACPlayerMoveEvent;
 import me.vekster.lightanticheat.event.playerplaceblock.LACPlayerPlaceBlockEvent;
 import me.vekster.lightanticheat.player.cache.PlayerCache;
+import me.vekster.lightanticheat.player.cache.PlayerHistoryRecorder;
 import me.vekster.lightanticheat.player.cache.entity.CachedEntity;
 import me.vekster.lightanticheat.player.cache.history.HistoryElement;
 import me.vekster.lightanticheat.player.cooldown.PlayerCooldown;
@@ -16,7 +18,6 @@ import me.vekster.lightanticheat.util.async.AsyncUtil;
 import me.vekster.lightanticheat.util.config.ConfigManager;
 import me.vekster.lightanticheat.util.cooldown.CooldownUtil;
 import me.vekster.lightanticheat.util.detection.CheckUtil;
-import me.vekster.lightanticheat.util.detection.LeanTowards;
 import me.vekster.lightanticheat.util.scheduler.Scheduler;
 import me.vekster.lightanticheat.version.VerPlayer;
 import me.vekster.lightanticheat.version.VerUtil;
@@ -125,34 +126,6 @@ public class LACPlayerListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void eventHistory(LACAsyncPlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        LACPlayer lacPlayer = event.getLacPlayer();
-        if (!isReadyForAsyncHistory(player, lacPlayer))
-            return;
-        lacPlayer.cache.history.onEvent.location.add(event.getFrom());
-        Set<Block> downBlocks = CheckUtil.getDownBlocks(player, 0.15);
-        lacPlayer.cache.history.onEvent.onGround
-                .add(new PlayerCache.OnGround(CheckUtil.isOnGround(player, downBlocks, lacPlayer.cache, LeanTowards.FALSE),
-                        CheckUtil.isOnGround(player, downBlocks, lacPlayer.cache, LeanTowards.TRUE)));
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void packetHistory(LACAsyncPacketReceiveEvent event) {
-        if (event.getPacketType() != PacketType.FLYING)
-            return;
-        Player player = event.getPlayer();
-        LACPlayer lacPlayer = event.getLacPlayer();
-        if (!isReadyForAsyncHistory(player, lacPlayer))
-            return;
-        lacPlayer.cache.history.onPacket.location.add(event.getPlayer().getLocation());
-        Set<Block> downBlocks = CheckUtil.getDownBlocks(player, 0.15);
-        lacPlayer.cache.history.onPacket.onGround
-                .add(new PlayerCache.OnGround(CheckUtil.isOnGround(player, downBlocks, lacPlayer.cache, LeanTowards.FALSE),
-                        CheckUtil.isOnGround(player, downBlocks, lacPlayer.cache, LeanTowards.TRUE)));
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
     public void activePotionEffects(LACAsyncPlayerMoveEvent event) {
         if (!isReadyForAsyncHistory(event.getPlayer(), event.getLacPlayer()))
             return;
@@ -192,6 +165,31 @@ public class LACPlayerListener implements Listener {
         } else {
             cache.entitiesVeryNearby = Collections.synchronizedSet(Collections.emptySet());
         }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void eventHistory(LACAsyncPlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        LACPlayer lacPlayer = event.getLacPlayer();
+        if (!isReadyForAsyncHistory(player, lacPlayer))
+            return;
+        PlayerHistoryRecorder.recordEventHistory(player, lacPlayer, event);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void packetHistory(LACAsyncPacketReceiveEvent event) {
+        if (event.getPacketType() != PacketType.FLYING)
+            return;
+        Player player = event.getPlayer();
+        LACPlayer lacPlayer = event.getLacPlayer();
+        if (!isReadyForAsyncHistory(player, lacPlayer))
+            return;
+        FlyingPacketData flying = event.getFlyingData();
+        if (flying == null) {
+            PlayerHistoryRecorder.recordPacketHistoryLegacy(player, lacPlayer);
+            return;
+        }
+        PlayerHistoryRecorder.recordPacketHistory(player, lacPlayer, flying);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

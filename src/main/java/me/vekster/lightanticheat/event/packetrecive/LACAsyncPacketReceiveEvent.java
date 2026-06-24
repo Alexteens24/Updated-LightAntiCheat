@@ -7,6 +7,7 @@ import me.vekster.lightanticheat.util.hook.server.folia.FoliaUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.Nullable;
 
 public class LACAsyncPacketReceiveEvent extends Event {
     private static final HandlerList handlers = new HandlerList();
@@ -15,8 +16,10 @@ public class LACAsyncPacketReceiveEvent extends Event {
     private final String packetName;
     private final PacketType packetType;
     private final int entityId;
+    private final FlyingPacketData flyingData;
 
-    public LACAsyncPacketReceiveEvent(Player player, LACPlayer lacPlayer, Object nmsPacket) {
+    public LACAsyncPacketReceiveEvent(Player player, LACPlayer lacPlayer, Object nmsPacket,
+                                      @Nullable FlyingPacketData flyingData) {
         super(!FoliaUtil.isFolia());
 
         this.player = player;
@@ -24,6 +27,7 @@ public class LACAsyncPacketReceiveEvent extends Event {
         this.packetName = nmsPacket.getClass().getSimpleName().split("\\$")[0];
         this.packetType = PacketTypeRecognizer.getPacketType(nmsPacket);
         this.entityId = PacketTypeRecognizer.getEntityId(nmsPacket);
+        this.flyingData = flyingData;
     }
 
     public Player getPlayer() {
@@ -46,6 +50,11 @@ public class LACAsyncPacketReceiveEvent extends Event {
         return entityId;
     }
 
+    @Nullable
+    public FlyingPacketData getFlyingData() {
+        return flyingData;
+    }
+
     public HandlerList getHandlers() {
         return handlers;
     }
@@ -54,4 +63,3 @@ public class LACAsyncPacketReceiveEvent extends Event {
         return handlers;
     }
 }
-
